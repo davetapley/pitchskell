@@ -12,15 +12,13 @@
 # resolver: nightly-2015-09-21
 # resolver: ghc-7.10.2
 # resolver: ghcjs-0.1.0_ghc-7.10.2
-# resolver:
-#  name: custom-snapshot
-#  location: "./custom-snapshot.yaml"
-resolver: lts-9.20
+resolver: "./old-inline-c-snapshot.yaml"
+#compiler: ghc-8.0.2
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
 #
-# packages:
+
 # - some-directory
 # - https://example.com/foo/bar/baz-0.0.2.tar.gz
 # - location:
@@ -67,4 +65,6 @@ extra-deps:
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
 
-
+#docker:
+#  image: stack-build:lts-10.1-opencv
+#  stack-exe: image

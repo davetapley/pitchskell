@@ -1,0 +1,7 @@
+resolver: lts-10.1
+
+name: old-inline-c-snapshot
+
+packages:
+  - inline-c-0.5.6.1
+  - inline-c-cpp-0.1.0.0
