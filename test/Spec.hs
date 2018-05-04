@@ -49,8 +49,17 @@ testFrameSizeConsistent = do
 trackTests :: TestTree
 trackTests = testGroup "Track tests"
   [ testCase "Track parse to length" $ trackLength
+  , testCase "Track loops" $ trackLoops
   ]
 
+testTrack = Track.parseTrack "srrsrr"
+
 trackLength :: Assertion
-trackLength = do
-  (Track.trackLength . Track.parseTrack $ "srrsrr") @?= 6
+trackLength = Track.trackLength testTrack  @?= 6
+
+trackLoops :: Assertion
+trackLoops = let
+  lastSegment = Track.back testTrack
+  Track.Segment _ _ exit = lastSegment
+  in exit @?= Track.origin
+
