@@ -6,6 +6,7 @@ import Data.Ord
 import Data.Maybe
 
 import qualified FrameGrabber
+import qualified Track
 import qualified OpenCV as CV
 import OpenCV.Core.Types.Mat
 import OpenCV.VideoIO.Types
@@ -13,10 +14,10 @@ import OpenCV.VideoIO.Types
 main :: IO ()
 main = defaultMain unitTests
 
-
 unitTests = testGroup "Unit tests"
   [ testCase "Can load" $ canLoadVideo
   , testCase "Framegrabber" $ testFrameSizeConsistent
+  , trackTests
   ]
 
 video :: FilePath
@@ -45,3 +46,5 @@ testFrameSizeConsistent = do
   infos <- FrameGrabber.withFrames video matInfo
   length infos @?= 94
 
+trackTests :: TestTree
+trackTests = testGroup "Track tests" []
