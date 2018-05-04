@@ -2,6 +2,7 @@
 
 module Track where
 
+import Prelude hiding (Left, Right)
 import Data.List
 import Data.Ratio
 
@@ -17,8 +18,8 @@ class LocalPositionable a where
 data Loop a = Node (Loop a) a (Loop a)
 mkLoop :: [a] -> Loop a
 mkLoop [] = error "must have at least one element"
-mkLoop xs = let (first,last) = go last xs first
-             in  first
+mkLoop xs = let (start, end) = go end xs start
+            in start
 
   where go :: Loop a -> [a] -> Loop a -> (Loop a, Loop a)
         go prev []     next = (next,prev)
@@ -36,9 +37,17 @@ unfoldLoop (Node _ start rest) = start : unfoldr nextTilStart rest
 loopSize :: Eq a => Loop a -> Int
 loopSize = length . unfoldLoop
 
-
-data Tile = Straight | Left | Right
+data Tile = Straight | Left | Right deriving Eq
 type Track = Loop Tile
 
 mkTrack :: [Tile] -> Track
 mkTrack = mkLoop
+
+parseTrack :: String -> Track
+parseTrack = mkTrack . map parseTile
+  where parseTile t
+          | t == 's' = Straight
+          | t == 'r' = Right
+
+trackLength :: Track -> Int
+trackLength = loopSize

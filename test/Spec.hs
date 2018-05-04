@@ -47,4 +47,10 @@ testFrameSizeConsistent = do
   length infos @?= 94
 
 trackTests :: TestTree
-trackTests = testGroup "Track tests" []
+trackTests = testGroup "Track tests"
+  [ testCase "Track parse to length" $ trackLength
+  ]
+
+trackLength :: Assertion
+trackLength = do
+  (Track.trackLength . Track.parseTrack $ "srrsrr") @?= 6
