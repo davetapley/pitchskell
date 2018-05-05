@@ -49,9 +49,9 @@ testFrameSizeConsistent = do
   length infos @?= 94
 
 loopTests :: TestTree
-loopTests = testGroup "Track tests"
-  [ testCase "mkLoop" $ mkLoopSingleTest
-  , testCase "mkLoop" $ mkLoopMultipleTest
+loopTests = testGroup "Loop tests"
+  [ testCase "mkLoop single" $ mkLoopSingleTest
+  , testCase "mkLoop multiple" $ mkLoopMultipleTest
   ]
 
 mkLoopSingleTest :: Assertion
@@ -70,6 +70,7 @@ trackTests :: TestTree
 trackTests = testGroup "Track tests"
   [ testCase "Start" $ trackStart
   , testCase "Track parse to length" $ trackLength
+  , testCase "Track shows" $ trackShow
   , testCase "Track loops" $ trackLoops
   ]
 
@@ -83,6 +84,10 @@ trackStart = let
 
 trackLength :: Assertion
 trackLength = Track.trackLength testTrack  @?= 6
+
+trackShow :: Assertion
+trackShow = let string = concatMap (show . Track.tile) . Loop.unfold $ testTrack
+            in string @?= "srrsrr"
 
 trackLoops :: Assertion
 trackLoops = let
