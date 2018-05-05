@@ -22,6 +22,8 @@ description:         Please see the README on Github at <https://github.com/duke
 dependencies:
 - base >= 4.7 && < 5
 - opencv
+- vector
+- gloss
 - monad-loops
 
 library:
