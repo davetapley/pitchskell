@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - opencv
 - vector
+- hmatrix
 - gloss
 - monad-loops
 

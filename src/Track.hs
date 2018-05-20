@@ -2,6 +2,7 @@ module Track where
 
 import Prelude hiding (Left, Right)
 import Data.Ratio
+import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified Loop
 
 data Tile = Straight | Left | Right deriving (Eq)
@@ -10,32 +11,31 @@ instance Show Tile where
   show Left = "l"
   show Right = "r"
 
-data Point = Point Rational Rational deriving (Eq, Show)
-type Entrance = Point
-type Exit = Point
-data Segment = Segment Tile Entrance Exit deriving (Eq, Show)
+type Position = HM.Vector Double
+type Transform = HM.Matrix Double
+
+data Segment = Segment
+  { tile :: Tile
+  , position :: Position
+  , transform ::  Transform
+  }deriving (Eq, Show)
+
 type Track = Loop.Loop Segment
 
-origin = Point 0 0
+start :: Segment
+start = Segment Straight (HM.vector [0,0]) (HM.matrix 2 [1,0,0,1])
 
 mkTrack :: [Tile] -> Track
-mkTrack tiles = let entrances = origin : scanl nextOrigin origin tiles
-                    exits = scanl nextOrigin origin tiles
-                in Loop.mkLoop $ zipWith3 Segment tiles entrances exits
+mkTrack (Straight : tiles) = Loop.mkLoop $ scanl nextSegment start tiles
+mkTrack _ = error "track must start with a straight"
 
-nextOrigin :: Point -> Tile -> Point
-nextOrigin (Point x y) Straight = Point (x + 1) y
-nextOrigin (Point x y) Right = Point (x + 1%2) (y + 1%2)
-
+nextSegment :: Segment -> Tile -> Segment
+nextSegment (Segment tile p t) Straight =  Segment Straight p t
+nextSegment (Segment tile p t) Left = Segment Left p t
+nextSegment (Segment tile p t) Right = Segment Right p t
 
 parseTrack :: String -> Track
 parseTrack = mkTrack . map parseTile
   where parseTile t
           | t == 's' = Straight
           | t == 'r' = Right
-
-tile :: Segment -> Tile
-tile (Segment t _ _) = t
-
-trackLength :: Track -> Int
-trackLength = Loop.length

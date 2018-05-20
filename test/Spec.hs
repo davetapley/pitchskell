@@ -1,6 +1,7 @@
 import Test.Tasty
 import Test.Tasty.HUnit
 
+import Data.Function
 import Data.List
 import Data.Ord
 import Data.Maybe
@@ -71,6 +72,7 @@ trackTests = testGroup "Track tests"
   [ testCase "Start" $ trackStart
   , testCase "Track parse to length" $ trackLength
   , testCase "Track shows" $ trackShow
+  , testCase "Track moves" $ trackMoves
   , testCase "Track loops" $ trackLoops
   ]
 
@@ -83,15 +85,19 @@ trackStart = let
   in startTile @?= Track.Straight
 
 trackLength :: Assertion
-trackLength = Track.trackLength testTrack  @?= 6
+trackLength = Loop.length testTrack  @?= 6
 
 trackShow :: Assertion
 trackShow = let string = concatMap (show . Track.tile) . Loop.unfold $ testTrack
             in string @?= "srrsrr"
 
+trackMoves :: Assertion
+trackMoves = let
+  lengthNub = length . (nubBy ((==) `on` Track.position)) . Loop.unfold
+  in lengthNub testTrack @?= Loop.length testTrack
+
 trackLoops :: Assertion
 trackLoops = let
   Loop.Loop _ (Loop.Node end) _ = Loop.prev testTrack
-  Track.Segment _ _ exit = end
-  in exit @?= Track.origin
-
+  Track.Segment tile p t = end
+  in Track.nextSegment end Track.Straight @?= Track.start
