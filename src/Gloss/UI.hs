@@ -1,4 +1,4 @@
-module Gloss.Main where
+module Gloss.UI where
 
 -- | Visibility on the 2D plane.
 --   Uses an instance of Warnocks algorithm.
@@ -18,8 +18,8 @@ import Gloss.State
 import Gloss.World
 import Graphics.Gloss.Interface.Pure.Game
 
-main :: IO ()
-main
+ui :: IO ()
+ui
  = do   world           <- initialWorld
         let state       =  initialState world
 
