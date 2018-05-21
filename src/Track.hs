@@ -30,9 +30,19 @@ mkTrack (Straight : tiles) = Loop.mkLoop $ scanl nextSegment start tiles
 mkTrack _ = error "track must start with a straight"
 
 nextSegment :: Segment -> Tile -> Segment
-nextSegment (Segment tile p t) Straight =  Segment Straight p t
-nextSegment (Segment tile p t) Left = Segment Left p t
-nextSegment (Segment tile p t) Right = Segment Right p t
+nextSegment segment tile = Segment tile (exitPosition segment) (exitTransform segment)
+
+exitPosition :: Segment -> Position
+exitPosition (Segment tile p t)
+  | tile == Straight = p + (t HM.#> HM.vector [1, 0])
+  | tile == Left = p + (t HM.#> HM.vector [1, 1])
+  | tile == Right = p + (t HM.#> HM.vector [1, -1])
+
+exitTransform :: Segment -> Transform
+exitTransform (Segment tile p t)
+  | tile == Straight = t
+  | tile == Left = t HM.<> HM.matrix 2 [0,1,1,0]
+  | tile == Right = t HM.<> HM.matrix 2 [0,-1,1,0]
 
 parseTrack :: String -> Track
 parseTrack = mkTrack . map parseTile
