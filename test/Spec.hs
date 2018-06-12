@@ -53,6 +53,10 @@ loopTests :: TestTree
 loopTests = testGroup "Loop tests"
   [ testCase "mkLoop single" $ mkLoopSingleTest
   , testCase "mkLoop multiple" $ mkLoopMultipleTest
+  , testCase "mkLoop multiple second" $ mkLoopMultipleSecondTest
+  , testCase "mkLoop multiple last" $ mkLoopMultipleLastTest
+  , testCase "loop unfold" $ loopUnfold
+  , testCase "loop unfold from middle" $ loopUnfoldMiddle
   ]
 
 mkLoopSingleTest :: Assertion
@@ -64,8 +68,48 @@ mkLoopSingleTest = let
 mkLoopMultipleTest :: Assertion
 mkLoopMultipleTest = let
   loop = Loop.mkLoop [1,2,3]
-  Loop.Loop end (Loop.Start one) next = loop
-  in one @?= 1
+  Loop.Loop (Loop.Loop _ (Loop.Node three) _) (Loop.Start one) (Loop.Loop _ (Loop.Node two) _) = loop
+  in do
+    one @?= 1
+    two @?= 2
+    three @?= 3
+
+mkLoopMultipleSecondTest :: Assertion
+mkLoopMultipleSecondTest = let
+  loop = Loop.mkLoop [1,2,3]
+  Loop.Loop _ _ (Loop.Loop left x right) = loop
+  Loop.Loop _ (Loop.Start one) _ = left
+  Loop.Node two = x
+  Loop.Loop _ (Loop.Node three) _ = right
+  in do
+    one @?= 1
+    two @?= 2
+    three @?= 3
+
+mkLoopMultipleLastTest :: Assertion
+mkLoopMultipleLastTest = let
+  loop = Loop.mkLoop [1,2,3]
+  Loop.Loop (Loop.Loop left x right) _ _ = loop
+  Loop.Loop _ (Loop.Node two) _ = left
+  Loop.Node three = x
+  Loop.Loop _ (Loop.Start one) _ = right
+  in do
+    two @?= 2
+    three @?= 3
+    one @?= 1
+
+loopUnfold :: Assertion
+loopUnfold = let
+  list = [1, 2]
+  loop = Loop.mkLoop list
+  in Loop.unfold loop @?= list
+
+loopUnfoldMiddle :: Assertion
+loopUnfoldMiddle = let
+  list = [1..6]
+  loop = Loop.mkLoop list
+  Loop.Loop _ _ second = loop
+  in Loop.unfold second @?= list
 
 trackTests :: TestTree
 trackTests = testGroup "Track tests"
