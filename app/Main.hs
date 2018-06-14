@@ -25,18 +25,18 @@ testTrack = Track.parseTrack "srrsrr"
 scalePoint :: Position -> G.Point
 scalePoint p  =
   let [x, y] = HM.toList p
-  in (double2Float x * 100, double2Float y * 100)
+  in (double2Float x * 300, double2Float y * 300)
 
 tilePath :: Segment -> G.Path
-tilePath (Segment _ p t) = [scalePoint p, scalePoint (p + (t HM.#> HM.vector [0.5,0.5]))]
+tilePath (Segment _ p t) = [scalePoint p, scalePoint (p + (t HM.#> HM.vector [0.5,0]))]
 
 segmentPicture :: G.Color -> Segment -> G.Picture
 segmentPicture color = G.Color color . G.line . tilePath
 
 segmentLabel :: Show a => G.Color -> Segment -> a -> G.Picture
-segmentLabel color (Segment _ p _) a = let
-  label = show a ++ " " ++ show p
-  translate = (uncurry G.Translate) (scalePoint p)
+segmentLabel color s a = let
+  label = show a ++ " " ++ show s
+  translate = (uncurry G.Translate) (scalePoint $ position s)
   scale = G.Scale 0.1 0.1
   in translate $ scale $ G.Color color $ G.Text label
 
@@ -45,5 +45,5 @@ picture = let
   colors = cycle [G.white, G.red]
   track = unfold testTrack
   lines = zipWith segmentPicture colors track
-  labels = zipWith3 segmentLabel colors track (zip track [1..])
-  in G.pictures (lines ++ labels)
+  labels = zipWith3 segmentLabel colors track [1..]
+  in G.pictures (labels ++ lines)

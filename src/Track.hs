@@ -18,7 +18,10 @@ data Segment = Segment
   { tile :: Tile
   , position :: Position
   , transform ::  Transform
-  }deriving (Eq, Show)
+  } deriving (Eq)
+
+instance Show Segment where
+  show (Segment tile p t) = show tile ++ show p ++ show t
 
 type Track = Loop.Loop Segment
 
