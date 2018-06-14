@@ -42,7 +42,7 @@ exitTransform :: Segment -> Transform
 exitTransform (Segment tile p t)
   | tile == Straight = t
   | tile == Left = t HM.<> HM.matrix 2 [0,1,1,0]
-  | tile == Right = t HM.<> HM.matrix 2 [0,-1,1,0]
+  | tile == Right = t HM.<> HM.matrix 2 [0,1,-1,0]
 
 parseTrack :: String -> Track
 parseTrack = mkTrack . map parseTile
