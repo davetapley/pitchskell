@@ -4,8 +4,11 @@ module Loop where
 
 import qualified Data.List as L
 
-data Node a = Start a | Node a deriving Show
+data Node a = Start a | Node a deriving (Eq, Show)
 data Loop a = Loop (Loop a) (Node a) (Loop a)
+
+instance Eq a => Eq (Loop a) where
+  a == b = unfold a == unfold b
 
 instance Functor Loop where
   fmap f = mkLoop . fmap f . unfold

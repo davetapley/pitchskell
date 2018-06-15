@@ -3,6 +3,7 @@ module Main where
 import Lib
 import Loop
 import Track
+import Data.Maybe (fromJust)
 import qualified Numeric.LinearAlgebra.HMatrix as HM
 
 import qualified Graphics.Gloss as G
@@ -20,7 +21,7 @@ main
         picture                  -- picture to display
 
 
-testTrack = Track.parseTrack "srrsrr"
+testTrack = fromJust $ Track.parseTrack "srrsrr"
 
 scalePoint :: Position -> G.Point
 scalePoint p  =

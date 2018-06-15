@@ -2,10 +2,11 @@ module Track where
 
 import Prelude hiding (Left, Right)
 import Data.Ratio
+import qualified Data.List as L
 import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified Loop
 
-data Tile = Straight | Left | Right deriving (Eq)
+data Tile = Straight | Left | Right deriving (Eq, Enum)
 instance Show Tile where
   show Straight = "s"
   show Left = "l"
@@ -32,6 +33,16 @@ mkTrack :: [Tile] -> Track
 mkTrack (Straight : tiles) = Loop.mkLoop $ scanl nextSegment start tiles
 mkTrack _ = error "track must start with a straight"
 
+findBy :: Eq b => [a] -> (a -> b) -> b -> Maybe a
+findBy xs f a = L.find (\x -> f x == a) xs
+
+chars :: String -> [String]
+chars = map (:[])
+
+parseTrack :: String -> Maybe Track
+parseTrack = (mkTrack <$>) . sequence . map parseTile . chars
+  where parseTile = findBy [Straight ..] show
+
 nextSegment :: Segment -> Tile -> Segment
 nextSegment segment tile = Segment tile (exitPosition segment) (exitTransform segment)
 
@@ -46,9 +57,3 @@ exitTransform (Segment tile p t)
   | tile == Straight = t
   | tile == Left = t HM.<> HM.matrix 2 [0,1,1,0]
   | tile == Right = t HM.<> HM.matrix 2 [0,1,-1,0]
-
-parseTrack :: String -> Track
-parseTrack = mkTrack . map parseTile
-  where parseTile t
-          | t == 's' = Straight
-          | t == 'r' = Right

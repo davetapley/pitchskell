@@ -113,14 +113,24 @@ loopUnfoldMiddle = let
 
 trackTests :: TestTree
 trackTests = testGroup "Track tests"
-  [ testCase "Start" $ trackStart
-  , testCase "Track parse to length" $ trackLength
-  , testCase "Track shows" $ trackShow
-  , testCase "Track moves" $ trackMoves
-  , testCase "Track loops" $ trackLoops
+  [testCase "parseTrack" $ parseTestTrack
+  , testCase "parseBadTrack" $ parseBadTrack
+  , testCase "start" $ trackStart
+  , testCase "parse to length" $ trackLength
+  , testCase "shows" $ trackShow
+  , testCase "moves" $ trackMoves
+  , testCase "loops" $ trackLoops
   ]
 
-testTrack = Track.parseTrack "srrsrr"
+testTrack = fromJust $ Track.parseTrack "srrsrr"
+
+parseTestTrack :: Assertion
+parseTestTrack = let
+  tiles = Track.tile <$> testTrack
+  in tiles @?= Loop.mkLoop [Track.Straight, Track.Right, Track.Right, Track.Straight, Track.Right, Track.Right]
+
+parseBadTrack :: Assertion
+parseBadTrack = Track.parseTrack "fail" @?= Nothing
 
 trackStart :: Assertion
 trackStart = let
