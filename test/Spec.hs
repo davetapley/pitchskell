@@ -6,6 +6,7 @@ import Data.List
 import Data.Ord
 import Data.Maybe
 
+import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified FrameGrabber
 import qualified Loop
 import qualified Track
@@ -68,7 +69,9 @@ mkLoopSingleTest = let
 mkLoopMultipleTest :: Assertion
 mkLoopMultipleTest = let
   loop = Loop.mkLoop [1,2,3]
-  Loop.Loop (Loop.Loop _ (Loop.Node three) _) (Loop.Start one) (Loop.Loop _ (Loop.Node two) _) = loop
+  Loop.Loop end (Loop.Start one) next = loop
+  Loop.Loop _ (Loop.Node two) _ = next
+  Loop.Loop _ (Loop.Node three) _ = end
   in do
     one @?= 1
     two @?= 2
@@ -116,7 +119,9 @@ trackTests = testGroup "Track tests"
   [testCase "parseTrack" $ parseTestTrack
   , testCase "parseBadTrack" $ parseBadTrack
   , testCase "start" $ trackStart
+  , testCase "nextSegment" $ trackNextSegment
   , testCase "parse to length" $ trackLength
+  , testCase "scanl" $ trackScanl
   , testCase "shows" $ trackShow
   , testCase "moves" $ trackMoves
   , testCase "loops" $ trackLoops
@@ -131,6 +136,33 @@ parseTestTrack = let
 
 parseBadTrack :: Assertion
 parseBadTrack = Track.parseTrack "fail" @?= Nothing
+
+trackNextSegment :: Assertion
+trackNextSegment = let
+  (Track.Segment tile p t) = Track.nextSegment Track.start Track.Right
+  in do
+    tile @?= Track.Right
+    p @?= HM.vector [1,0]
+    t @?= HM.matrix 2 [1,0,0,1]
+
+trackScanl :: Assertion
+trackScanl = let
+  x : y : z : [] = scanl Track.nextSegment Track.start [Track.Right, Track.Right]
+  (Track.Segment x_tile x_p x_t) = x
+  (Track.Segment y_tile y_p y_t) = y
+  (Track.Segment z_tile z_p z_t) = z
+  in do
+    x_tile @?= Track.Straight
+    x_p @?= HM.vector [0,0]
+    x_t @?= HM.matrix 2 [1,0,0,1]
+
+    y_tile @?= Track.Right
+    y_p @?= HM.vector [1,0]
+    y_t @?= HM.matrix 2 [1,0,0,1]
+
+    z_tile @?= Track.Right
+    z_p @?= HM.vector [2.0, -1.0]
+    z_t @?= HM.matrix 2 [0,1,-1,0]
 
 trackStart :: Assertion
 trackStart = let
