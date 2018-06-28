@@ -8,6 +8,7 @@ import Data.Maybe
 
 import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified FrameGrabber
+import StartFiducial
 import qualified Loop
 import qualified Track
 import qualified OpenCV as CV
@@ -20,6 +21,7 @@ main = defaultMain unitTests
 unitTests = testGroup "Unit tests"
   [ testCase "Can load" $ canLoadVideo
   , testCase "Framegrabber" $ testFrameSizeConsistent
+  , testCase "StartFiducial" $ testStartFiducial
   , loopTests
   , trackTests
   ]
@@ -49,6 +51,23 @@ testFrameSizeConsistent :: Assertion
 testFrameSizeConsistent = do
   infos <- FrameGrabber.withFrames video matInfo
   length infos @?= 94
+
+renderImage
+    :: FilePath
+    -> CV.Mat ('CV.S [height, width]) channels depth
+    -> IO ()
+renderImage fp img = do
+    let bs = CV.exceptError $ CV.imencode (CV.OutputPng CV.defaultPngParams) img
+    putStr $ "Writing image " <> dest <> " ..."
+    B.writeFile dest bs
+    putStrLn " OK"
+  where
+    dest = mkDestPath fp
+
+testStartFiducial :: Assertion
+testStartFiducial = do
+  mats <- FrameGrabber.withFrames video startDetectAndComputeImg
+  renderImage "/tmp/testStartFiducial" (head mats)
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"

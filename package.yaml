@@ -22,10 +22,12 @@ description:         Please see the README on Github at <https://github.com/duke
 dependencies:
 - base >= 4.7 && < 5
 - opencv
+- opencv-extra
 - vector
 - hmatrix
 - gloss
 - monad-loops
+- linear
 
 library:
   source-dirs: src

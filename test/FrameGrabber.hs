@@ -11,7 +11,6 @@ import OpenCV.VideoIO.Types
 
 type TestMat = CV.Mat ('S ['D, 'D]) 'D 'D
 
-
 withFile :: FilePath -> IO CV.VideoCapture
 withFile fp = do
     cap <- CV.newVideoCapture
