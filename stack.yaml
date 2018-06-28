@@ -12,7 +12,7 @@
 # resolver: nightly-2015-09-21
 # resolver: ghc-7.10.2
 # resolver: ghcjs-0.1.0_ghc-7.10.2
-resolver: "./old-inline-c-snapshot.yaml"
+resolver: nightly-2018-06-08
 #compiler: ghc-8.0.2
 
 # User packages to be built.
