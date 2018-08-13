@@ -35,14 +35,14 @@ resolver: nightly-2018-06-08
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
-- location:
-    git: https://github.com/dukedave/haskell-opencv
-    commit: 505af779ebb2610b3e22e5ff033f1037b8467522
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 extra-deps:
-  - opencv-0.0.2.0
-  - opencv-extra-0.2.0.1
+  - git: git@github.com:LumiGuide/haskell-opencv
+    commit: 5fe41ffe54bf850a65aeef8a507753ade61a44cf
+    subdirs:
+      - opencv
+      - opencv-extra
   - linear-1.20.7
   - repa-3.4.1.3
 
