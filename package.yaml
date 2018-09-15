@@ -28,6 +28,7 @@ dependencies:
 - gloss
 - monad-loops
 - linear
+- bytestring
 
 library:
   source-dirs: src
