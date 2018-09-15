@@ -59,20 +59,14 @@ renderImage
     -> IO ()
 renderImage fp img = do
     let bs = CV.exceptError $ CV.imencode (CV.OutputPng CV.defaultPngParams) img
-    putStr $ "Writing image " <> dest <> " ..."
-    B.writeFile dest bs
+    putStr $ "Writing image " <> fp <> " ..."
+    B.writeFile fp bs
     putStrLn " OK"
-  where
-    dest = mkDestPath fp
-
-    mkDestPath :: FilePath -> FilePath
-    mkDestPath fp = "generated/" <> fp
 
 testStartFiducial :: Assertion
 testStartFiducial = do
-  1 @?= 1
-  --mats <- FrameGrabber.withFrames video (const startDetectAndComputeImg)
-  --renderImage "/tmp/testStartFiducial" (head mats)
+  mats <- FrameGrabber.withFrames video (const startDetectAndComputeImg)
+  renderImage "/tmp/testStartFiducial" (head mats)
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"
