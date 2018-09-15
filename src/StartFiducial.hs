@@ -1,14 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ExistentialQuantification #-}
-
 module StartFiducial where
-
 import Control.Monad
 import Data.Foldable
 import Data.Int

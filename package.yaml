@@ -56,3 +56,20 @@ tests:
     - pitchskell
     - tasty
     - tasty-hunit
+
+default-extensions:
+  - BangPatterns
+  - DataKinds
+  - FlexibleContexts
+  - FlexibleInstances
+  - LambdaCase
+  - OverloadedStrings
+  - PackageImports
+  - PolyKinds
+  - QuasiQuotes
+  - RecordWildCards
+  - ScopedTypeVariables
+  - TemplateHaskell
+  - TupleSections
+  - TypeFamilies
+  - TypeOperators
