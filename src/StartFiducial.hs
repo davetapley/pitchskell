@@ -11,6 +11,7 @@ import Linear
 import OpenCV
 import OpenCV.Extra.XFeatures2d
 
+-- Inspired by  https://github.com/LumiGuide/haskell-opencv/blob/5fe41ffe54bf850a65aeef8a507753ade61a44cf/opencv-extra/src/OpenCV/Extra/XFeatures2d.hs#L302
 startDetectAndComputeImg frame = exceptError $ do
     (kpts, _descs) <- siftDetectAndCompute sift frame Nothing
     withMatM (Proxy :: Proxy [height, width])
