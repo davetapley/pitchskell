@@ -9,6 +9,7 @@ import Data.Maybe
 
 import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified FrameGrabber
+import qualified Mat as MatTest
 import StartFiducial
 import qualified Loop
 import qualified Track
@@ -23,6 +24,7 @@ unitTests = testGroup "Unit tests"
   [ testCase "Can load" $ canLoadVideo
   , testCase "Framegrabber" $ testFrameSizeConsistent
   , testCase "StartFiducial" $ testStartFiducial
+  , testCase "Mat" $ MatTest.all
   , loopTests
   , trackTests
   ]
@@ -59,9 +61,7 @@ renderImage
     -> IO ()
 renderImage fp img = do
     let bs = CV.exceptError $ CV.imencode (CV.OutputPng CV.defaultPngParams) img
-    putStr $ "Writing image " <> fp <> " ..."
     B.writeFile fp bs
-    putStrLn " OK"
 
 testStartFiducial :: Assertion
 testStartFiducial = do
