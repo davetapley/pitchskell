@@ -29,6 +29,7 @@ dependencies:
 - monad-loops
 - linear
 - bytestring
+- primitive
 
 library:
   source-dirs: src

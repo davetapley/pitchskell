@@ -57,7 +57,7 @@ testFrameSizeConsistent = do
 
 renderImage
     :: FilePath
-    -> CV.Mat ('CV.S [height, width]) channels depth
+    -> CV.Mat ('CV.S [h, w]) channels depth
     -> IO ()
 renderImage fp img = do
     let bs = CV.exceptError $ CV.imencode (CV.OutputPng CV.defaultPngParams) img
