@@ -17,9 +17,12 @@ module Mat where
   import Data.Proxy
   import Data.Int
 
+  import Data.ByteString as B
   import Data.STRef
   import Control.Monad.ST
   import Control.Monad.Primitive
+
+  import System.IO.Unsafe ( unsafePerformIO )
 
   black :: Scalar
   black = toScalar (V4   0   0   0 255 :: V4 Double)
@@ -65,12 +68,25 @@ module Mat where
     --  defValue $ \imgM -> do
     --    return
 
-
   -- Now do the draw it bit:
   -- matCopyToM
   -- void $ matCopyToM imgM (V2 0 0) frog Nothing
   -- circle imgM (round <$> kptPoint kptRec :: V2 Int32) 5 red 1 LineType_AA 0
   -- and such...
+
+  mat3 :: Mat D Channels Derpth
+  mat3 = exceptError $ mkMat (fromList [10 :: Int32, 20]) channels depth black
+
+  frog :: Mat D Channels Derpth
+  frog =
+      exceptError $ coerceMat $ unsafePerformIO $
+        imdecode ImreadUnchanged <$> B.readFile "kikker.jpg"
+
+  frogSize :: [Int32]
+  frogSize = miShape . matInfo $ frog
+
+  matFrog :: Mat D Channels Derpth
+  matFrog = exceptError $ mkMat (fromList frogSize) channels depth black
 
   all :: Assertion
   all =
