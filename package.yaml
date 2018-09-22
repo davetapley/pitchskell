@@ -30,6 +30,7 @@ dependencies:
 - linear
 - bytestring
 - primitive
+- mtl
 
 library:
   source-dirs: src

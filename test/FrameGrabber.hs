@@ -10,9 +10,10 @@ import Data.Word
 import OpenCV.TypeLevel
 import OpenCV.VideoIO.Types
 import OpenCV.Internal.VideoIO.Types
+import OpenCV.Unsafe
 import Data.Maybe
 
-type TestMat = CV.Mat ('S ['D, 'D]) 'D 'D
+type TestMat = CV.Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
 withFile :: FilePath -> IO CV.VideoCapture
 withFile fp = do
@@ -29,7 +30,7 @@ getFrames fp = do
     -- So just use the frame count instead.
 
     frameCount <- CV.videoCaptureGetI cap VideoCapPropFrameCount
-    catMaybes <$> replicateM (fromIntegral frameCount) (grabRetrieve cap)
+    map unsafeCoerceMat <$> catMaybes <$> replicateM (fromIntegral frameCount) (grabRetrieve cap)
 
     where grabRetrieve cap = CV.videoCaptureGrab cap >> CV.videoCaptureRetrieve cap
 

@@ -1,6 +1,7 @@
 module StartFiducial where
 import Control.Monad
 import Control.Monad.Primitive
+import Control.Monad.Except
 import Data.Foldable
 import Data.Int
 import Data.Proxy
@@ -27,11 +28,13 @@ frog =
     exceptError $ coerceMat $ unsafePerformIO $
       imdecode ImreadUnchanged <$> B.readFile "kikker.jpg"
 
-drawIt :: (PrimMonad m, Foldable f)
-  => f KeyPoint
+drawIt :: (MonadError CvException m, PrimMonad m, Foldable f)
+  => (Mat ('S '[h, w]) c d)
+  -> (f KeyPoint)
   -> Mut (Mat ('S '[h, w]) c d) (PrimState m)
   -> m ()
-drawIt kpts imgM = do
+drawIt frame kpts imgM = do
+      void $ matCopyToM imgM (V2 0 0) frame Nothing
       for_ kpts $ \kpt -> do
         let kptRec = keyPointAsRec kpt
         circle imgM (round <$> kptPoint kptRec :: V2 Int32) 5 red 1 LineType_AA 0
@@ -52,7 +55,7 @@ startDetectAndComputeImg frame = exceptError $ do
   withMatM (h ::: w ::: Z)
            (Proxy :: Proxy (S 3))
            (Proxy :: Proxy (S Word8))
-             white $ drawIt kpts
+             white $ drawIt frame kpts
     where
       mat3Info = matInfo frame
       [h, w] = miShape mat3Info
