@@ -56,7 +56,7 @@ module Mat where
 
   font = Font FontHersheySimplex NotSlanted 1.0
 
-  --drawHello :: PrimMonad m => Mut (Mat ('S '[h, w]) c d) (PrimState m) -> m ()
+  drawHello :: PrimMonad m => Mut (Mat ('S '[h, w]) c d) (PrimState m) -> m ()
   drawHello imgM =  putText imgM "Hello World"
                       (V2 10 35 :: V2 Int32) font
                       black 1 LineType_AA False
@@ -101,12 +101,28 @@ module Mat where
   --     . (Mat (ShapeT [height, width]) ('S channels) ('S depth))
   --    => Mat (ShapeT [height, width]) ('S channels) ('S depth)
 
+
   withMat3 = exceptError $ do
-    withMatM (fromList [10 :: Int32, 20])
+    let mat3Info = matInfo mat3
+    let [h, w] = miShape mat3Info
+      in withMatM (h ::: w ::: Z)
              channels
              depth
-             --white $ (\_ -> pure ())
              white $ drawHello
+
+  type Shape4 = 'S ['D, 'D]
+  shape4 = Proxy :: Proxy Shape4
+
+  type Channels4 = 'D
+  channels4 = Proxy :: Proxy Channels4
+
+  type Derpth4 = 'D
+  derpth4 = Proxy :: Proxy Derpth4
+
+  type TestMat = Mat ('S ['D, 'D]) 'D 'D
+
+  --mat4 :: TestMat
+  --mat4 = exceptError $ mkMat shape4 channels4 derpth4 black
 
   frog :: Mat D Channels Derpth
   frog =
