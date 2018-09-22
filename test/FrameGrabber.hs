@@ -38,3 +38,8 @@ withFrames :: FilePath -> (TestMat -> a) -> IO [a]
 withFrames fp f = do
     frames <- getFrames fp
     return $ map f frames
+
+withFramesM :: FilePath -> (TestMat -> IO a) -> IO [a]
+withFramesM fp f = do
+    frames <- getFrames fp
+    sequence $ map f frames

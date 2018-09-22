@@ -64,7 +64,7 @@ renderImage fp img = do
 -- ffmpeg -r 30 -i testStartFiducial_%d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p test.mp4
 testStartFiducial :: Assertion
 testStartFiducial = do
-  mats <- FrameGrabber.withFrames video startDetectAndComputeImg
+  mats <- FrameGrabber.withFramesM video startDetectAndComputeImg
   mapM_ renderFrame (zip [0..3] mats)
   where
     renderFrame (n, mat) = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
