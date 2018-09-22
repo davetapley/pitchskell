@@ -63,10 +63,13 @@ renderImage fp img = do
     let bs = CV.exceptError $ CV.imencode (CV.OutputPng CV.defaultPngParams) img
     B.writeFile fp bs
 
+-- ffmpeg -r 30 -i testStartFiducial_%d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p test.mp4
 testStartFiducial :: Assertion
 testStartFiducial = do
-  mats <- FrameGrabber.withFrames video (startDetectAndComputeImg)
-  renderImage "/tmp/testStartFiducial" (head mats)
+  mats <- FrameGrabber.withFrames video startDetectAndComputeImg
+  mapM_ renderFrame (zip [0..] mats)
+  where
+    renderFrame (n, mat) = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"
