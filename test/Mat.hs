@@ -27,6 +27,8 @@ module Mat where
   black :: Scalar
   black = toScalar (V4   0   0   0 255 :: V4 Double)
 
+  white  = toScalar (V4 255 255 255 255 :: V4 Double)
+
   mat1 :: Mat (S '[]) (S 1) (S Word8)
   mat1 = emptyMat
 
@@ -54,10 +56,24 @@ module Mat where
 
   font = Font FontHersheySimplex NotSlanted 1.0
 
-  drawHello :: PrimMonad m => Mut (Mat ('S '[h, w]) c d) (PrimState m) -> m ()
+  --drawHello :: PrimMonad m => Mut (Mat ('S '[h, w]) c d) (PrimState m) -> m ()
   drawHello imgM =  putText imgM "Hello World"
-                         (V2 10 35 :: V2 Int32) font
-                         black 1 LineType_AA False
+                      (V2 10 35 :: V2 Int32) font
+                      black 1 LineType_AA False
+
+  withMat2 :: forall
+                (width    :: Nat)
+                (height   :: Nat)
+                (channels :: Nat)
+                (depth    :: *)
+       . (Mat (ShapeT [height, width]) ('S channels) ('S depth) ~ (Mat Shape Channels Derpth))
+      => Mat (ShapeT [height, width]) ('S channels) ('S depth)
+
+  withMat2 = exceptError $ do
+    withMatM (Proxy :: Proxy [height, width])
+             (Proxy :: Proxy channels)
+             (Proxy :: Proxy depth)
+             white $ drawHello
 
   drawDerp :: Mat (S [w, h]) b c -> Mat (S [w, h]) b c
   drawDerp = undefined
@@ -76,6 +92,21 @@ module Mat where
 
   mat3 :: Mat D Channels Derpth
   mat3 = exceptError $ mkMat (fromList [10 :: Int32, 20]) channels depth black
+
+  --withMat3 :: forall
+  --              (width    :: Nat)
+  --              (height   :: Nat)
+  --              (channels :: Nat)
+  --              (depth    :: *)
+  --     . (Mat (ShapeT [height, width]) ('S channels) ('S depth))
+  --    => Mat (ShapeT [height, width]) ('S channels) ('S depth)
+
+  withMat3 = exceptError $ do
+    withMatM (fromList [10 :: Int32, 20])
+             channels
+             depth
+             --white $ (\_ -> pure ())
+             white $ drawHello
 
   frog :: Mat D Channels Derpth
   frog =
