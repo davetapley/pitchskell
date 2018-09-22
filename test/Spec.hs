@@ -65,7 +65,7 @@ renderImage fp img = do
 
 testStartFiducial :: Assertion
 testStartFiducial = do
-  mats <- FrameGrabber.withFrames video (const startDetectAndComputeImg)
+  mats <- FrameGrabber.withFrames video (startDetectAndComputeImg)
   renderImage "/tmp/testStartFiducial" (head mats)
 
 loopTests :: TestTree

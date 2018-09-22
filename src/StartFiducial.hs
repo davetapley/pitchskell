@@ -27,7 +27,10 @@ frog =
     exceptError $ coerceMat $ unsafePerformIO $
       imdecode ImreadUnchanged <$> B.readFile "kikker.jpg"
 
-drawIt :: (PrimMonad m, Foldable f) => f KeyPoint -> Mut (Mat ('S '[h, w]) c d) (PrimState m) -> m ()
+drawIt :: (PrimMonad m, Foldable f)
+  => f KeyPoint
+  -> Mut (Mat ('S '[h, w]) c d) (PrimState m)
+  -> m ()
 drawIt kpts imgM = do
       for_ kpts $ \kpt -> do
         let kptRec = keyPointAsRec kpt
@@ -36,20 +39,23 @@ drawIt kpts imgM = do
 sift = mkSift defaultSiftParams
 
 -- inspired by https://github.com/LumiGuide/haskell-opencv/blob/5fe41ffe54bf850a65aeef8a507753ade61a44cf/opencv-extra/src/OpenCV/Extra/XFeatures2d.hs#L295
-startDetectAndComputeImg :: forall
-                (width    :: Nat)
-                (height   :: Nat)
-                (channels :: Nat)
-                (depth    :: *)
-       . (Mat (ShapeT [height, width]) ('S channels) ('S depth) ~ Frog)
-      => Mat (ShapeT [height, width]) ('S channels) ('S depth)
+--startDetectAndComputeImg :: forall
+--                (width    :: Nat)
+--                (height   :: Nat)
+--                (channels :: Nat)
+--                (depth    :: *)
+--       . (Mat (ShapeT [height, width]) ('S channels) ('S depth) ~ Frog)
+--      => Mat (ShapeT [height, width]) ('S channels) ('S depth)
 
-startDetectAndComputeImg = exceptError $ do
-    (kpts, _descs) <- siftDetectAndCompute sift frog Nothing
-    withMatM (Proxy :: Proxy [height, width])
-             (Proxy :: Proxy channels)
-             (Proxy :: Proxy depth)
+startDetectAndComputeImg frame = exceptError $ do
+  (kpts, _descs) <- siftDetectAndCompute sift frame Nothing
+  withMatM (h ::: w ::: Z)
+           (Proxy :: Proxy (S 3))
+           (Proxy :: Proxy (S Word8))
              white $ drawIt kpts
+    where
+      mat3Info = matInfo frame
+      [h, w] = miShape mat3Info
 
 -- startDetectAndComputeImg = exceptError $ do
 --     (kpts, _descs) <- siftDetectAndCompute sift frog Nothing
