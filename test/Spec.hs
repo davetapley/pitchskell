@@ -9,7 +9,6 @@ import Data.Maybe
 
 import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified FrameGrabber
-import qualified Mat as MatTest
 import StartFiducial
 import qualified Loop
 import qualified Track
@@ -24,7 +23,6 @@ unitTests = testGroup "Unit tests"
   [ testCase "Can load" $ canLoadVideo
   , testCase "Framegrabber" $ testFrameSizeConsistent
   , testCase "StartFiducial" $ testStartFiducial
-  , testCase "Mat" $ MatTest.all
   , loopTests
   , trackTests
   ]
@@ -67,7 +65,7 @@ renderImage fp img = do
 testStartFiducial :: Assertion
 testStartFiducial = do
   mats <- FrameGrabber.withFrames video startDetectAndComputeImg
-  mapM_ renderFrame (zip [0..] mats)
+  mapM_ renderFrame (zip [0..3] mats)
   where
     renderFrame (n, mat) = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
 

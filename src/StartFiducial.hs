@@ -6,7 +6,6 @@ import Data.Foldable
 import Data.Int
 import Data.Proxy
 import Data.Word
-import GHC.TypeLits
 import Linear
 import OpenCV
 import OpenCV.Extra.XFeatures2d
@@ -21,14 +20,8 @@ blue        = toScalar (V4 255   0   0 255 :: V4 Double)
 green       = toScalar (V4   0 255   0 255 :: V4 Double)
 red         = toScalar (V4   0   0 255 255 :: V4 Double)
 
-type Frog             = Mat (ShapeT [ 390,  500]) ('S 3) ('S Word8)
-
-frog :: Frog
-frog =
-    exceptError $ coerceMat $ unsafePerformIO $
-      imdecode ImreadUnchanged <$> B.readFile "kikker.jpg"
-
-drawIt :: (MonadError CvException m, PrimMonad m, Foldable f)
+drawIt
+  :: (MonadError CvException m, PrimMonad m, Foldable f)
   => (Mat ('S '[h, w]) c d)
   -> (f KeyPoint)
   -> Mut (Mat ('S '[h, w]) c d) (PrimState m)
