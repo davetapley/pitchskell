@@ -95,7 +95,7 @@ testStartFiducialPosition = do
   putStrLn $ show $ V.head $ start
   putStrLn $ show $ V.head $ img
 
-  let center = findCenter idleNoCarsRotated
+  let center = fromJust $ findCenter idleNoCarsRotated
   putStrLn $ show $ center
   renderImage "/tmp/drawCenter.png" $ drawPoint idleNoCarsRotated center
 
@@ -103,7 +103,7 @@ testStartFiducialPosition = do
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
   (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames video
-  let (centers :: [V2 Double]) = map findCenter frames
+  let (centers :: [V2 Double]) = map (fromJust . findCenter) frames
   length centers @?= 3
 
   --let (debugs :: [FrameMat]) = zipWith drawPoint frames centers
