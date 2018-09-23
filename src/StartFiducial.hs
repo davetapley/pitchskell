@@ -4,7 +4,7 @@ import Data.Default
 import Data.Foldable
 import Data.Int
 import Data.Maybe
-import Data.Vector as V(Vector, fromList, (!), map, head)
+import Data.Vector as V(Vector, fromList, (!), map, head, take, unzip)
 import Data.Word
 import Foreign.C.Types
 import GHC.Float
@@ -12,6 +12,8 @@ import Linear
 import OpenCV
 import OpenCV.Extra.XFeatures2d
 import OpenCV.Internal.C.Types
+
+import Debug.Trace as Debug
 
 import System.IO.Unsafe ( unsafePerformIO )
 import qualified Data.ByteString as B
@@ -22,27 +24,28 @@ findCenter :: FrameMat -> V2 Double
 findCenter frame =
   let matches = flannMatches frame
       (framePts, startPts) = matchPairs frame matches
-      homography = fst $ fromJust $ exceptError $ findHomography (fromList framePts) (fromList startPts) (def { fhpMethod = FindHomographyMethod_RANSAC })
-  in V.head $ fmap (fmap realToFrac . fromPoint) $ perspectiveTransform (V.fromList[ V2 0 0 :: V2 CDouble]) homography
+      homography = fst $ fromJust $ exceptError $ findHomography (framePts) (startPts) (def { fhpMethod = FindHomographyMethod_RANSAC })
+      transform = fmap (fmap realToFrac . fromPoint) $ perspectiveTransform (V.fromList[ V2 0 0 :: V2 CDouble]) homography
+  in V.head $ transform
 
 flannMatches :: FrameMat -> Vector DMatch
 flannMatches frame = unsafePerformIO $ do
   fbmatcher <- newFlannBasedMatcher (def { indexParams = FlannKDTreeIndexParams 1 })
-  match fbmatcher (siftDescriptor frame) (siftDescriptor startTile)  Nothing
-    where siftDescriptor =  descriptor .siftMat
+  match fbmatcher (siftDescriptor startTile) (siftDescriptor frame) Nothing
+    where siftDescriptor =  descriptor . siftMat
 
-matchPairs :: FrameMat -> Vector DMatch -> ([V2 CDouble], [V2 CDouble])
-matchPairs frame = unzip . toList . fmap (getMatchingPoints frame)
+matchPairs :: FrameMat -> Vector DMatch -> (Vector (V2 CDouble), Vector (V2 CDouble))
+matchPairs frame = V.unzip . V.map (getMatchingPoints frame) . V.take 20
 
 getMatchingPoints :: FrameMat -> DMatch -> (V2 CDouble, V2 CDouble)
 getMatchingPoints frame dmatch =
   let matchRec = dmatchAsRec dmatch
-      queryPt = (keypoints . siftMat $ frame) ! fromIntegral (dmatchQueryIdx matchRec)
-      trainPt = (keypoints . siftMat $ startTile) ! fromIntegral (dmatchTrainIdx matchRec)
+      queryPt = (keypoints . siftMat $ startTile) ! fromIntegral (dmatchQueryIdx matchRec)
+      trainPt = (keypoints . siftMat $ frame) ! fromIntegral (dmatchTrainIdx matchRec)
       queryPtRec = keyPointAsRec queryPt
       trainPtRec = keyPointAsRec trainPt
-     in (v2ToDouble $ kptPoint queryPtRec, v2ToDouble $ kptPoint trainPtRec)
-  where v2ToDouble = fmap (toCDouble . float2Double)
+     in (V2 0 0,V2 0 0) -- (v2ToDouble $ kptPoint queryPtRec, v2ToDouble $ kptPoint trainPtRec)
+  --where v2ToDouble = fmap (toCDouble . float2Double)
 
 type KeyPoints = Vector KeyPoint
 type DescriptorMat = Mat 'D 'D 'D
