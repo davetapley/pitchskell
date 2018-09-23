@@ -28,7 +28,7 @@ unitTests = testGroup "Unit tests"
   ]
 
 video :: FilePath
-video = "test/video/idle-no-cars-0.mov"
+video = "test/video/idle-no-cars-0-3-frames.mp4"
 
 canLoadVideo :: Assertion
 canLoadVideo = do
@@ -51,7 +51,7 @@ canLoadVideo = do
 testFrameSizeConsistent :: Assertion
 testFrameSizeConsistent = do
   infos <- FrameGrabber.withFrames video matInfo
-  length infos @?= 94
+  length infos @?= 3
 
 renderImage
     :: FilePath
