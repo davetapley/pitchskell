@@ -7,9 +7,13 @@ import Data.List
 import Data.Ord
 import Data.Maybe
 
+import Linear
+import Linear.Vector
+
 import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified FrameGrabber
 import StartFiducial
+import StartFiducialDebug
 import qualified Loop
 import qualified Track
 import qualified OpenCV as CV
@@ -22,7 +26,7 @@ main = defaultMain unitTests
 unitTests = testGroup "Unit tests"
   [ testCase "Can load" $ canLoadVideo
   , testCase "Framegrabber" $ testFrameSizeConsistent
-  , testCase "StartFiducial" $ testStartFiducial
+  , testCase "StartFiducial" $ testStartFiducialConsistency
   , loopTests
   , trackTests
   ]
@@ -62,12 +66,21 @@ renderImage fp img = do
     B.writeFile fp bs
 
 -- ffmpeg -r 30 -i testStartFiducial_%d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p test.mp4
-testStartFiducial :: Assertion
-testStartFiducial = do
-  mats <- FrameGrabber.withFramesM video startDetectAndComputeImg
-  mapM_ renderFrame (zip [0..3] mats)
-  where
-    renderFrame (n, mat) = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
+testStartFiducialConsistency :: Assertion
+testStartFiducialConsistency = do
+  (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames video
+  let (centers :: [V2 Double]) = map findCenter frames
+  length centers @?= 3
+
+  let (debugs :: [FrameMat]) = zipWith drawPoint frames centers
+
+  let renderFrame n mat = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
+  sequence_ $ zipWith renderFrame [0..] debugs
+
+  let mean = sumV centers ^/ 3
+  let deltas = fmap ((^-^) mean) centers
+  fmap ((<) (V2 1.0 1.0)) deltas @?= replicate 3 True
+
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"
