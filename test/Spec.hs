@@ -65,7 +65,7 @@ testFrameSizeConsistent = do
 startFiducialTests :: TestTree
 startFiducialTests = testGroup "Start fiducial tests"
   [ testCase "Start fiducial position" testStartFiducialPosition
-  --, testCase "Start fiducial consistency" $ testStartFiducialConsistency
+  , testCase "Start fiducial consistency" $ testStartFiducialConsistency
   ]
 
 --idleNoCarsRotated :: CV.Mat ('S ['D, 'D]) ('S 3) ('S Word8)
@@ -85,36 +85,30 @@ testStartFiducialPosition :: Assertion
 testStartFiducialPosition = do
   let startKeypoints = keypoints $ siftMat $ startTile
   let imgKeypoints = keypoints $ siftMat $ idleNoCarsRotated
-  let matches = V.take 20 $ flannMatches idleNoCarsRotated
+  let matches = flannMatches idleNoCarsRotated
   let drawn = CV.exceptError $ CV.drawMatches startTile startKeypoints idleNoCarsRotated imgKeypoints matches def
   renderImage "/tmp/drawMatches.png" drawn
 
   let (start, img) = matchPairs idleNoCarsRotated matches
-  putStrLn $ show $ length $ start
-  putStrLn $ show $ length $ img
-  putStrLn $ show $ V.head $ start
-  putStrLn $ show $ V.head $ img
-
   let center = fromJust $ findCenter idleNoCarsRotated
-  putStrLn $ show $ center
   renderImage "/tmp/drawCenter.png" $ drawPoint idleNoCarsRotated center
 
--- ffmpeg -r 30 -i testStartFiducial_%d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p test.mp4
+  (round <$> center) @?= V2 408 420
+
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
   (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames video
   let (centers :: [V2 Double]) = map (fromJust . findCenter) frames
   length centers @?= 3
 
-  --let (debugs :: [FrameMat]) = zipWith drawPoint frames centers
+  let (debugs :: [FrameMat]) = zipWith drawPoint frames centers
 
-  --let renderFrame n mat = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
-  --sequence_ $ zipWith renderFrame [0..] debugs
+  let renderFrame n mat = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
+  sequence_ $ zipWith renderFrame [0..] debugs
 
-  --let mean = sumV centers ^/ 3
-  --let deltas = fmap ((^-^) mean) centers
-  --fmap ((<) (V2 1.0 1.0)) deltas @?= replicate 3 True
-
+  let mean = sumV centers ^/ 3
+  let deltas = fmap ((^-^) mean) centers
+  (< (V2 1.0 1.0)) <$> deltas @?= replicate 3 True
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"

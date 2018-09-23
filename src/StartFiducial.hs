@@ -13,8 +13,6 @@ import OpenCV
 import OpenCV.Extra.XFeatures2d
 import OpenCV.Internal.C.Types
 
-import Debug.Trace as Debug
-
 import System.IO.Unsafe ( unsafePerformIO )
 import qualified Data.ByteString as B
 
