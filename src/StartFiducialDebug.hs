@@ -34,8 +34,12 @@ drawArrow'
 
 drawArrow' frame points imgM = do
   matCopyToM imgM (V2 0 0) frame Nothing
-  let origin = round <$> (points ! 0)
-  let tip = round <$> (points ! 1)
-  circle imgM origin 5 red 1 LineType_AA 0
-  arrowedLine imgM origin tip blue 1 LineType_AA 0 0.15
+  let a = round <$> points ! 0
+  let b = round <$> points ! 1
+  let c = round <$> points ! 2
+  let d = round <$> points ! 3
+  line imgM a b green 2 LineType_AA 0
+  line imgM b c green 2 LineType_AA 0
+  line imgM c d green 2 LineType_AA 0
+  line imgM d a green 2 LineType_AA 0
 

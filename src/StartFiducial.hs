@@ -5,6 +5,7 @@ import Data.Foldable
 import Data.Int
 import Data.Maybe
 import Data.Vector as V(Vector, fromList, (!), map, head, take, unzip)
+import qualified Data.Vector as V(map)
 import Data.Word
 import Foreign.C.Types
 import GHC.Float
@@ -25,9 +26,7 @@ findCenter frame =
       homography = exceptError $ findHomography framePts startPts (def { fhpMethod = FindHomographyMethod_RANSAC })
     in case homography of
         Nothing -> Nothing
-        Just (fm, _) -> Just $ fmap (fmap realToFrac . fromPoint) $ perspectiveTransform startPoints fm
-
-  where startPoints =  V.fromList [ (V2 0 0) :: V2 CDouble,  V2 0 10]
+        Just (fm, _) -> Just $ fmap (fmap realToFrac . fromPoint) $ perspectiveTransform tilePoints fm
 
 flannMatches :: FrameMat -> Vector DMatch
 flannMatches frame = unsafePerformIO $ do
@@ -36,7 +35,7 @@ flannMatches frame = unsafePerformIO $ do
     where siftDescriptor =  descriptor . siftMat
 
 matchPairs :: FrameMat -> Vector DMatch -> (Vector (V2 CDouble), Vector (V2 CDouble))
-matchPairs frame = V.unzip . V.map (getMatchingPoints frame) . V.take 10
+matchPairs frame = V.unzip . V.map (getMatchingPoints frame) -- . V.take 10
 
 getMatchingPoints :: FrameMat -> DMatch -> (V2 CDouble, V2 CDouble)
 getMatchingPoints frame dmatch =
@@ -63,3 +62,14 @@ startTile :: Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 startTile =
     exceptError $ coerceMat $ unsafePerformIO $
       imdecode ImreadUnchanged <$> B.readFile "data/start-tile.png"
+
+tilePoints :: Vector (V2 (CDouble))
+tilePoints =
+  let [h, w] = fmap fromIntegral . miShape . matInfo $ startTile
+  --in V.fromList [V2 (fromIntegral h / 2.0) (fromIntegral w), V2 (fromIntegral h / 2.0)  0]
+  in V.fromList
+    [ V2 0 0
+    , V2 w 0
+    , V2 w h
+    , V2 0 h
+    ]
