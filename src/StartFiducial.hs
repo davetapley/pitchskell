@@ -18,16 +18,16 @@ import qualified Data.ByteString as B
 
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
-findCenter :: FrameMat -> Maybe (V2 Double)
+findCenter :: FrameMat -> Maybe (Vector (V2 Double))
 findCenter frame =
   let matches = flannMatches frame
       (framePts, startPts) = matchPairs frame matches
       homography = exceptError $ findHomography framePts startPts (def { fhpMethod = FindHomographyMethod_RANSAC })
     in case homography of
         Nothing -> Nothing
-        Just (fm, _) -> Just $ V.head $ fmap (fmap realToFrac . fromPoint) $ perspectiveTransform origin fm
+        Just (fm, _) -> Just $ fmap (fmap realToFrac . fromPoint) $ perspectiveTransform startPoints fm
 
-  where origin = V.fromList[ V2 0 0 :: V2 CDouble]
+  where startPoints =  V.fromList [ (V2 0 0) :: V2 CDouble,  V2 0 10]
 
 flannMatches :: FrameMat -> Vector DMatch
 flannMatches frame = unsafePerformIO $ do

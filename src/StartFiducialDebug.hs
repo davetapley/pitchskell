@@ -5,6 +5,7 @@ import Control.Monad.Primitive
 import Data.Int
 import Data.Proxy
 import Data.Word
+import Data.Vector
 import Linear
 import OpenCV
 import OpenCV.Extra.XFeatures2d
@@ -19,21 +20,22 @@ blue        = toScalar (V4 255   0   0 255 :: V4 Double)
 green       = toScalar (V4   0 255   0 255 :: V4 Double)
 red         = toScalar (V4   0   0 255 255 :: V4 Double)
 
-drawPoint :: FrameMat -> V2 Double -> FrameMat
-drawPoint frame point = do
+drawArrow :: FrameMat -> Vector (V2 Double) -> FrameMat
+drawArrow frame points = do
   let [h, w] = miShape . matInfo $ frame
     in exceptError $ withMatM (h ::: w ::: Z) (Proxy :: Proxy (S 3)) (Proxy :: Proxy (S Word8))
-               white $ drawPoint' frame point
-drawPoint'
+               white $ drawArrow' frame points
+drawArrow'
   :: (MonadError CvException m, PrimMonad m)
   => (Mat ('S '[h, w]) c d)
-  -> V2 Double
+  -> Vector (V2 Double)
   -> Mut (Mat ('S '[h, w]) c d) (PrimState m)
   -> m ()
-drawPoint' frame point imgM = do
+
+drawArrow' frame points imgM = do
   matCopyToM imgM (V2 0 0) frame Nothing
-  let origin = round <$> point
-  let tip = origin + V2 20 20
+  let origin = round <$> (points ! 0)
+  let tip = round <$> (points ! 1)
   circle imgM origin 5 red 1 LineType_AA 0
-  arrowedLine imgM origin tip blue 2 LineType_AA 0 0.15
+  arrowedLine imgM origin tip blue 1 LineType_AA 0 0.15
 

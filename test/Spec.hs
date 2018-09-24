@@ -90,22 +90,23 @@ testStartFiducialPosition = do
   renderImage "/tmp/drawMatches.png" drawn
 
   let (start, img) = matchPairs idleNoCarsRotated matches
-  let center = fromJust $ findCenter idleNoCarsRotated
-  renderImage "/tmp/drawCenter.png" $ drawPoint idleNoCarsRotated center
+  let points = fromJust $ findCenter idleNoCarsRotated
+  renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCarsRotated points
 
+  let center = points V.! 0
   (round <$> center) @?= V2 408 420
 
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
   (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames video
-  let (centers :: [V2 Double]) = map (fromJust . findCenter) frames
-  length centers @?= 3
+  let (points :: [V.Vector (V2 Double)]) = map (fromJust . findCenter) frames
 
-  let (debugs :: [FrameMat]) = zipWith drawPoint frames centers
+  let (debugs :: [FrameMat]) = zipWith drawArrow frames points
 
   let renderFrame n mat = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
   sequence_ $ zipWith renderFrame [0..] debugs
 
+  let centers = fmap (V.! 0) points
   let mean = sumV centers ^/ 3
   let deltas = fmap ((^-^) mean) centers
   (< (V2 1.0 1.0)) <$> deltas @?= replicate 3 True
