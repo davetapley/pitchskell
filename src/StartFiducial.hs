@@ -36,7 +36,7 @@ flannMatches frame = unsafePerformIO $ do
     where siftDescriptor =  descriptor . siftMat
 
 matchPairs :: FrameMat -> Vector DMatch -> (Vector (V2 CDouble), Vector (V2 CDouble))
-matchPairs frame = V.unzip . V.map (getMatchingPoints frame)
+matchPairs frame = V.unzip . V.map (getMatchingPoints frame) . V.take 10
 
 getMatchingPoints :: FrameMat -> DMatch -> (V2 CDouble, V2 CDouble)
 getMatchingPoints frame dmatch =
