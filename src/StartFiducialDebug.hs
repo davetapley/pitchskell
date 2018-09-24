@@ -32,5 +32,8 @@ drawPoint'
   -> m ()
 drawPoint' frame point imgM = do
   matCopyToM imgM (V2 0 0) frame Nothing
-  circle imgM (round <$> point) 5 red 1 LineType_AA 0
+  let origin = round <$> point
+  let tip = origin + V2 20 20
+  circle imgM origin 5 red 1 LineType_AA 0
+  arrowedLine imgM origin tip blue 2 LineType_AA 0 0.15
 
