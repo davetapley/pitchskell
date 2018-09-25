@@ -205,8 +205,8 @@ trackNextSegment = let
   (Track.Segment tile p t) = Track.nextSegment Track.start Track.Right
   in do
     tile @?= Track.Right
-    p @?= HM.vector [1,0]
-    t @?= HM.matrix 2 [1,0,0,1]
+    p @?= V2 1 0
+    t @?= V2 (V2 1 0) (V2 0 1)
 
 trackScanl :: Assertion
 trackScanl = let
@@ -216,16 +216,16 @@ trackScanl = let
   (Track.Segment z_tile z_p z_t) = z
   in do
     x_tile @?= Track.Straight
-    x_p @?= HM.vector [0,0]
-    x_t @?= HM.matrix 2 [1,0,0,1]
+    x_p @?= V2 0 0
+    x_t @?= V2 (V2 1 0) (V2 0 1)
 
     y_tile @?= Track.Right
-    y_p @?= HM.vector [1,0]
-    y_t @?= HM.matrix 2 [1,0,0,1]
+    y_p @?= V2 1 0
+    y_t @?= V2 (V2 1 0) (V2 0 1)
 
     z_tile @?= Track.Right
-    z_p @?= HM.vector [2.0, -1.0]
-    z_t @?= HM.matrix 2 [0,1,-1,0]
+    z_p @?= V2 2.0 (-1.0)
+    z_t @?= V2 (V2 0 1) (V2 (-1) 0)
 
 trackStart :: Assertion
 trackStart = let

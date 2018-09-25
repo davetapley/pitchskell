@@ -3,8 +3,11 @@ module Track where
 import Prelude hiding (Left, Right)
 import Data.Ratio
 import qualified Data.List.Extended as L
-import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified Loop
+
+import Linear.Matrix
+import Linear.V2
+import Linear.V3
 
 data Tile = Straight | Left | Right deriving (Eq, Enum)
 instance Show Tile where
@@ -12,8 +15,8 @@ instance Show Tile where
   show Left = "l"
   show Right = "r"
 
-type Position = HM.Vector Double
-type Transform = HM.Matrix Double
+type Position = V2 Double
+type Transform = V2 (V2 Double)
 
 data Segment = Segment
   { tile :: Tile
@@ -27,7 +30,7 @@ instance Show Segment where
 type Track = Loop.Loop Segment
 
 start :: Segment
-start = Segment Straight (HM.vector [0,0]) (HM.matrix 2 [1,0,0,1])
+start = Segment Straight (V2 0 0) (V2 (V2 1 0) (V2 0 1))
 
 mkTrack :: [Tile] -> Track
 mkTrack (Straight : tiles) = Loop.mkLoop $ scanl nextSegment start tiles
@@ -42,12 +45,12 @@ nextSegment segment tile = Segment tile (exitPosition segment) (exitTransform se
 
 exitPosition :: Segment -> Position
 exitPosition (Segment tile p t)
-  | tile == Straight = p + (t HM.#> HM.vector [1, 0])
-  | tile == Left = p + (t HM.#> HM.vector [1, 1])
-  | tile == Right = p + (t HM.#> HM.vector [1, -1])
+  | tile == Straight = p + (t !* V2 1 0)
+  | tile == Left = p + (t !* V2 1 1)
+  | tile == Right = p + (t !* V2 1 (-1))
 
 exitTransform :: Segment -> Transform
 exitTransform (Segment tile p t)
   | tile == Straight = t
-  | tile == Left = t HM.<> HM.matrix 2 [0,1,1,0]
-  | tile == Right = t HM.<> HM.matrix 2 [0,1,-1,0]
+  | tile == Left = t !*! V2 (V2 0 1) (V2 1 0)
+  | tile == Right = t !*! V2 (V2 0 1) (V2 (-1) 0)
