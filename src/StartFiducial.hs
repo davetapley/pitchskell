@@ -74,4 +74,4 @@ startTile =
 tilePoints :: Vector (V2 (CDouble))
 tilePoints =
   let [h, w] = fmap fromIntegral . miShape . matInfo $ startTile
-  in V.fromList [ V2 0 0, V2 0 h]
+  in V.fromList [ V2 w 0, V2 w h]

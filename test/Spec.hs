@@ -95,8 +95,8 @@ testStartFiducialPosition = do
 
   let center = points V.! 0
   let tip = points V.! 1
-  (round <$> center) @?= V2 383 397
-  (round <$> tip) @?= V2 383 340
+  (round <$> center) @?= V2 383 487
+  (round <$> tip) @?= V2 383 430
 
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
