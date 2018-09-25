@@ -5,7 +5,7 @@ import Data.Foldable
 import Data.Int
 import Data.Maybe
 import Data.Vector as V(Vector, fromList, (!), map, head, take, unzip)
-import qualified Data.Vector as V(map)
+import qualified Data.Vector as V
 import Data.Word
 import Foreign.C.Types
 import GHC.Float
@@ -26,7 +26,15 @@ findCenter frame =
       homography = exceptError $ findHomography framePts startPts (def { fhpMethod = FindHomographyMethod_RANSAC })
     in case homography of
         Nothing -> Nothing
-        Just (fm, _) -> Just $ fmap (fmap realToFrac . fromPoint) $ perspectiveTransform tilePoints fm
+        Just (fm, _) -> Just $ getVector . fmap (fmap realToFrac . fromPoint) $ perspectiveTransform tilePoints fm
+
+getVector :: Vector (V2 Double) -> Vector (V2 Double)
+getVector vs =
+  let a = vs ! 0
+      b = vs ! 1
+      origin = a + ((b - a) / 2)
+      ortho = origin + perp (b - a)
+    in V.fromList [origin, ortho]
 
 flannMatches :: FrameMat -> Vector DMatch
 flannMatches frame = unsafePerformIO $ do
@@ -66,10 +74,4 @@ startTile =
 tilePoints :: Vector (V2 (CDouble))
 tilePoints =
   let [h, w] = fmap fromIntegral . miShape . matInfo $ startTile
-  --in V.fromList [V2 (fromIntegral h / 2.0) (fromIntegral w), V2 (fromIntegral h / 2.0)  0]
-  in V.fromList
-    [ V2 0 0
-    , V2 w 0
-    , V2 w h
-    , V2 0 h
-    ]
+  in V.fromList [ V2 0 0, V2 0 h]

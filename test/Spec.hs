@@ -20,8 +20,8 @@ import qualified Track
 import qualified OpenCV as CV
 import OpenCV.Core.Types.Mat
 import OpenCV.VideoIO.Types
-
 import qualified Data.Vector as V
+
 
 import System.IO.Unsafe ( unsafePerformIO )
 
@@ -94,7 +94,9 @@ testStartFiducialPosition = do
   renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCarsRotated points
 
   let center = points V.! 0
-  (round <$> center) @?= V2 408 420
+  let tip = points V.! 1
+  (round <$> center) @?= V2 383 397
+  (round <$> tip) @?= V2 383 340
 
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
