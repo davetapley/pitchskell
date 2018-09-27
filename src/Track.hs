@@ -6,6 +6,7 @@ import qualified Data.List.Extended as L
 import qualified Loop
 
 import Linear.Matrix
+import Linear.Vector
 import Linear.V2
 import Linear.V3
 
@@ -29,15 +30,24 @@ instance Show Segment where
 
 type Track = Loop.Loop Segment
 
+tBasis :: V2 Double
+tBasis = V2 1 0
+
 start :: Segment
 start = Segment Straight (V2 0 0) (V2 (V2 1 0) (V2 0 1))
 
-mkTrack :: [Tile] -> Track
-mkTrack (Straight : tiles) = Loop.mkLoop $ scanl nextSegment start tiles
-mkTrack _ = error "track must start with a straight"
+startFromPT :: Position -> Transform -> Segment
+startFromPT = Segment Straight
 
-parseTrack :: String -> Maybe Track
-parseTrack = (mkTrack <$>) . sequence . map parseTile . L.chars
+--startFromVectors :: V2 (V2 Double) -> Segment
+--startFromVectors (V2 a b) = startFromPT a ((b - a) ^/ (V2 1 0))
+
+mkTrack :: Segment -> [Tile] -> Track
+mkTrack start (Straight : tiles) = Loop.mkLoop $ scanl nextSegment start tiles
+mkTrack _ _ = error "track must start with a straight"
+
+parseTrack :: Segment -> String -> Maybe Track
+parseTrack start = (mkTrack start <$>) . sequence . map parseTile . L.chars
   where parseTile = L.findBy [Straight ..] show
 
 nextSegment :: Segment -> Tile -> Segment
@@ -45,12 +55,12 @@ nextSegment segment tile = Segment tile (exitPosition segment) (exitTransform se
 
 exitPosition :: Segment -> Position
 exitPosition (Segment tile p t)
-  | tile == Straight = p + (t !* V2 1 0)
-  | tile == Left = p + (t !* V2 1 1)
+  | tile == Straight = p + (t !* V2 1.613 0)
+  | tile == Left = p + (t !* V2 0.65 0.65)
   | tile == Right = p + (t !* V2 1 (-1))
 
 exitTransform :: Segment -> Transform
 exitTransform (Segment tile p t)
   | tile == Straight = t
-  | tile == Left = t !*! V2 (V2 0 1) (V2 1 0)
-  | tile == Right = t !*! V2 (V2 0 1) (V2 (-1) 0)
+  | tile == Left = V2 (V2 0 1) (V2 1 0) !*! t
+  | tile == Right = V2 (V2 0 1) (V2 (-1) 0) !*! t

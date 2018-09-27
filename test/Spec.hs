@@ -17,6 +17,7 @@ import StartFiducial
 import StartFiducialDebug
 import qualified Loop
 import qualified Track
+import TrackDebug
 import qualified OpenCV as CV
 import OpenCV.Core.Types.Mat
 import OpenCV.VideoIO.Types
@@ -32,6 +33,7 @@ unitTests = testGroup "Unit tests"
   [ testCase "Can load" $ canLoadVideo
   , testCase "Framegrabber" $ testFrameSizeConsistent
   , startFiducialTests
+  , testCase "TrackDebug" $ trackDebugTest
   , loopTests
   , trackTests
   ]
@@ -103,7 +105,7 @@ testStartFiducialConsistency = do
   (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames video
   let (points :: [V.Vector (V2 Double)]) = map (fromJust . findCenter) frames
 
-  let (debugs :: [FrameMat]) = zipWith drawArrow frames points
+  let (debugs :: [StartFiducial.FrameMat]) = zipWith drawArrow frames points
 
   let renderFrame n mat = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
   sequence_ $ zipWith renderFrame [0..] debugs
@@ -112,6 +114,13 @@ testStartFiducialConsistency = do
   let mean = sumV centers ^/ 3
   let deltas = fmap ((^-^) mean) centers
   (< (V2 1.0 1.0)) <$> deltas @?= replicate 3 True
+
+trackDebugTest :: Assertion
+trackDebugTest = do
+  --let track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
+  let track = fromJust $ Track.parseTrack start "sslr"
+      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 0) (V2 (-57) 0))
+  renderImage "/tmp/trackDebug.png" $ drawTrack idleNoCarsRotated track
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"
@@ -190,7 +199,7 @@ trackTests = testGroup "Track tests"
   , testCase "loops" $ trackLoops
   ]
 
-testTrack = fromJust $ Track.parseTrack "srrsrr"
+testTrack = fromJust $ Track.parseTrack Track.start "srrsrr"
 
 parseTestTrack :: Assertion
 parseTestTrack = let
@@ -198,7 +207,7 @@ parseTestTrack = let
   in tiles @?= Loop.mkLoop [Track.Straight, Track.Right, Track.Right, Track.Straight, Track.Right, Track.Right]
 
 parseBadTrack :: Assertion
-parseBadTrack = Track.parseTrack "fail" @?= Nothing
+parseBadTrack = Track.parseTrack Track.start "fail" @?= Nothing
 
 trackNextSegment :: Assertion
 trackNextSegment = let

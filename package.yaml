@@ -32,6 +32,7 @@ dependencies:
 - primitive
 - mtl
 - data-default
+- text
 
 library:
   source-dirs: src
