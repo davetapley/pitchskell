@@ -56,11 +56,11 @@ nextSegment segment tile = Segment tile (exitPosition segment) (exitTransform se
 exitPosition :: Segment -> Position
 exitPosition (Segment tile p t)
   | tile == Straight = p + (t !* V2 1.613 0)
-  | tile == Left = p + (t !* V2 0.65 0.65)
-  | tile == Right = p + (t !* V2 1 (-1))
+  | tile == Left = p + (t !* V2 0.82 0.82)
+  | tile == Right = p + (t !* V2 (0.82) (-0.82))
 
 exitTransform :: Segment -> Transform
 exitTransform (Segment tile p t)
   | tile == Straight = t
-  | tile == Left = V2 (V2 0 1) (V2 1 0) !*! t
-  | tile == Right = V2 (V2 0 1) (V2 (-1) 0) !*! t
+  | tile == Left = (V2 (V2 0 1) (V2 (-1) 0)) !*! t
+  | tile == Right =  (V2 (V2 0 (-1)) (V2 1 0)) !*! t

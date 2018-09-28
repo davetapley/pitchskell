@@ -48,8 +48,8 @@ drawSegment imgM color (Segment _ p (V2 t0 t1)) = do
   arrowedLine imgM a b color 1 LineType_AA 0 0.15
   putText' (showV2 a) a
 
-  putText' (showV2 t0) b
-  putText' (showV2 t1) (b + V2 0 10)
+  putText' (showV2 $ round <$> t0) b
+  putText' (showV2 $ round <$> t1) (b + V2 0 10)
 
   where putText' str pos = putText imgM (T.pack $ str) pos (Font FontHersheySimplex NotSlanted 0.3) color 1 LineType_AA False
 

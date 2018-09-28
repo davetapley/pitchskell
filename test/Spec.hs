@@ -32,7 +32,7 @@ main = defaultMain unitTests
 unitTests = testGroup "Unit tests"
   [ testCase "Can load" $ canLoadVideo
   , testCase "Framegrabber" $ testFrameSizeConsistent
-  , startFiducialTests
+  -- , startFiducialTests
   , testCase "TrackDebug" $ trackDebugTest
   , loopTests
   , trackTests
@@ -117,9 +117,8 @@ testStartFiducialConsistency = do
 
 trackDebugTest :: Assertion
 trackDebugTest = do
-  --let track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
-  let track = fromJust $ Track.parseTrack start "sslr"
-      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 0) (V2 (-57) 0))
+  let track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
+      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
   renderImage "/tmp/trackDebug.png" $ drawTrack idleNoCarsRotated track
 
 loopTests :: TestTree
