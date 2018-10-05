@@ -48,8 +48,8 @@ renderMask
   -> m ()
 
 renderMask (Segment Straight p t) imgM =
-  let origin = round <$> (p + (t !* V2 0 (-0.41)))
-      size = round <$> (t !* V2 1.613 0.82)
+  let origin = round <$> (p + (t !* V2 0 (-0.5)))
+      size = round <$> (t !* V2 1.613 1)
   in rectangle imgM (toRect $ HRect origin size) white (-1) LineType_8 0
 
 renderMask (Segment Left p t) imgM =

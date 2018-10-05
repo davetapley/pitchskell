@@ -123,6 +123,7 @@ tileMatcherTests :: TestTree
 tileMatcherTests = testGroup "Tile matcher tests"
   [ testCase "Straight is a straight" $ tileMatcherStraight
   , testCase "Left is a left" $ tileMatcherLeft
+  , testCase "Whole track mask" $ tileMatcherTrack
   ]
 
 tileMatcherStraight :: Assertion
@@ -138,6 +139,12 @@ tileMatcherLeft = do
       track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
       left = track Loop.!! 2
   renderImage "/tmp/tileMatcherLeft.png" $ TileMatcherDebug.drawMask idleNoCarsRotated left
+
+tileMatcherTrack :: Assertion
+tileMatcherTrack = do
+  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
+      track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
+  renderImage "/tmp/tileMatcherTrack.png" $ TileMatcherDebug.drawTrackMask idleNoCarsRotated track
 
 trackDebugTest :: Assertion
 trackDebugTest = do
