@@ -53,10 +53,9 @@ renderMask (Segment Straight p t) imgM =
   in rectangle imgM (toRect $ HRect origin size) white (-1) LineType_8 0
 
 renderMask (Segment Left p t) imgM =
-  let outerOrigin = round <$> (p + (t !* V2 0 0.5))
-      outerRadius = round $ distance p (p + (t !* V2 1 0))
-      innerOrigin = round <$> (p + (t !* V2 0 0.5))
-      innerRadius = round $ distance p (p + (t !* V2 0.31 0))
+  let origin = round <$> (p + (t !* V2 0 0.82))
+      halfOuterSize = round <$> (V2 80 80) -- (t !* V2 0.82 0.82)
+      innerRadius = round $ distance p (p + (t !* V2 0.32 0))
   in do
-    circle imgM outerOrigin outerRadius white (-1) LineType_8 0
-    circle imgM innerOrigin innerRadius black (-1) LineType_8 0
+    ellipse imgM origin halfOuterSize 270 0 90 white (-1) LineType_8 0
+    circle imgM origin innerRadius black (-1) LineType_8 0
