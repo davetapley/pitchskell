@@ -1,6 +1,6 @@
 module TileMatcher where
 
-import Prelude hiding (Left)
+import Prelude hiding (Left, Right)
 
 import Control.Monad.Except(MonadError)
 import Control.Monad.Primitive
@@ -54,8 +54,16 @@ renderMask (Segment Straight p t) imgM =
 
 renderMask (Segment Left p t) imgM =
   let origin = round <$> (p + (t !* V2 0 0.82))
-      halfOuterSize = round <$> (V2 80 80) -- (t !* V2 0.82 0.82)
+      halfOuterSize = round <$> abs <$> (t !* V2 1.41 1.41)
       innerRadius = round $ distance p (p + (t !* V2 0.32 0))
   in do
     ellipse imgM origin halfOuterSize 270 0 90 white (-1) LineType_8 0
+    circle imgM origin innerRadius black (-1) LineType_8 0
+
+renderMask (Segment Right p t) imgM =
+  let origin = round <$> (p + (t !* V2 0 (-0.82)))
+      halfOuterSize = round <$> abs <$> (t !* V2 1.41 1.41)
+      innerRadius = round $ distance p (p + (t !* V2 0.32 0))
+  in do
+    ellipse imgM origin halfOuterSize 180 0 90 white (-1) LineType_8 0
     circle imgM origin innerRadius black (-1) LineType_8 0
