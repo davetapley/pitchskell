@@ -15,6 +15,8 @@ import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified FrameGrabber
 import StartFiducial
 import StartFiducialDebug
+import TileMatcher
+import qualified TileMatcherDebug
 import qualified Loop
 import qualified Track
 import TrackDebug
@@ -34,6 +36,7 @@ unitTests = testGroup "Unit tests"
   , testCase "Framegrabber" $ testFrameSizeConsistent
   -- TODO: Speed this up
   -- , startFiducialTests
+  , tileMatcherTests
   , testCase "TrackDebug" $ trackDebugTest
   , loopTests
   , trackTests
@@ -115,6 +118,26 @@ testStartFiducialConsistency = do
   let mean = sumV centers ^/ 3
   let deltas = fmap ((^-^) mean) centers
   (< (V2 1.0 1.0)) <$> deltas @?= replicate 3 True
+
+tileMatcherTests :: TestTree
+tileMatcherTests = testGroup "Tile matcher tests"
+  [ testCase "Straight is a straight" $ tileMatcherStraight
+  , testCase "Left is a left" $ tileMatcherLeft
+  ]
+
+tileMatcherStraight :: Assertion
+tileMatcherStraight = do
+  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
+      track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
+      straight = track Loop.!! 1
+  renderImage "/tmp/tileMatcherStraight.png" $ TileMatcherDebug.drawMask idleNoCarsRotated straight
+
+tileMatcherLeft :: Assertion
+tileMatcherLeft = do
+  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
+      track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
+      left = track Loop.!! 2
+  renderImage "/tmp/tileMatcherLeft.png" $ TileMatcherDebug.drawMask idleNoCarsRotated left
 
 trackDebugTest :: Assertion
 trackDebugTest = do

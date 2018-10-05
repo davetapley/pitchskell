@@ -43,3 +43,5 @@ next :: Loop a -> Loop a
 next (Loop _ _ x) = x
 
 length = L.length . unfold
+
+(!!) = (L.!!) . unfold
