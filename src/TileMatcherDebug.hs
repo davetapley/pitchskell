@@ -1,6 +1,7 @@
 module TileMatcherDebug where
 
 import Control.Monad
+import Data.Foldable
 import Data.Proxy
 import Data.Word
 import OpenCV
@@ -19,14 +20,10 @@ drawTrackMask frame track = do
       segmentMask = Just . mask (w, h)
 
     in exceptError $ withMatM (h ::: w ::: Z) (Proxy :: Proxy (S 3)) (Proxy :: Proxy (S Word8))
-       grey $ \imgM -> sequence_ $ fmap (\segment -> matCopyToM imgM (V2 0 0) frame (segmentMask segment)) track
+       grey $ \imgM -> traverse_ (matCopyToM imgM (V2 0 0) frame . segmentMask ) track
 
-
-
-  -- where addTile segment = matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) segment))
-
-drawMask :: FrameMat -> Segment -> FrameMat
-drawMask frame (Segment _ p t) = do
+drawTileMasks :: FrameMat -> Segment -> FrameMat
+drawTileMasks frame (Segment _ p t) = do
   let [h, w] = miShape . matInfo $ frame
     in exceptError $ withMatM (h ::: (w*4) ::: Z) (Proxy :: Proxy (S 3)) (Proxy :: Proxy (S Word8))
                grey $ \imgM -> do

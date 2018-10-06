@@ -131,14 +131,14 @@ tileMatcherStraight = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
       track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
       straight = track Loop.!! 1
-  renderImage "/tmp/tileMatcherStraight.png" $ TileMatcherDebug.drawMask idleNoCarsRotated straight
+  renderImage "/tmp/tileMatcherStraight.png" $ TileMatcherDebug.drawTileMasks idleNoCarsRotated straight
 
 tileMatcherLeft :: Assertion
 tileMatcherLeft = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
       track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
       left = track Loop.!! 2
-  renderImage "/tmp/tileMatcherLeft.png" $ TileMatcherDebug.drawMask idleNoCarsRotated left
+  renderImage "/tmp/tileMatcherLeft.png" $ TileMatcherDebug.drawTileMasks idleNoCarsRotated left
 
 tileMatcherTrack :: Assertion
 tileMatcherTrack = do
