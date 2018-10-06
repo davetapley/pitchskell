@@ -26,6 +26,13 @@ drawTrackMask frame track = do
                  matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) ( Loop.unfold track !! 6)))
                  matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) ( Loop.unfold track !! 7)))
                  matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) ( Loop.unfold track !! 8)))
+                 matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) ( Loop.unfold track !! 9)))
+                 matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) ( Loop.unfold track !! 10)))
+                 matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) ( Loop.unfold track !! 11)))
+                 matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) ( Loop.unfold track !! 12)))
+                 matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) ( Loop.unfold track !! 13)))
+                 matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) ( Loop.unfold track !! 14)))
+                 matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) ( Loop.unfold track !! 15)))
                  -- (mapM_ addTile (Loop.unfold track))
 
   -- where addTile segment = matCopyToM imgM (V2 0 0) frame (Just (mask (w, h) segment))
