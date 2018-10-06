@@ -1,5 +1,4 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-
 module Loop where
 
 import qualified Data.List as L
@@ -15,6 +14,9 @@ instance Functor Loop where
 
 instance Show a => Show (Loop a) where
   show = show . unfold
+
+instance Foldable Loop where
+  foldr f z x = foldr f z (unfold x)
 
 mkLoop :: [a] -> Loop a
 mkLoop (x:xs) = let
