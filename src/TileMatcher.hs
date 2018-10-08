@@ -12,21 +12,36 @@ import Linear.Vector
 import Linear
 import Linear.V2
 import Linear.V3
+import Linear.V4
 import OpenCV
+import OpenCV.Core.Types
 import Data.Word
+import Data.List
+import Data.Function
 
 import Track
 
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
-nextTile :: FrameMat -> Segment -> Tile
-nextTile = undefined
+findTrack :: FrameMat -> Segment -> [Segment]
+findTrack frame start =
+  let (Segment Straight pStart tStart) = start
+      isStart (Segment tile p _) = tile == Straight && distance pStart p < 10
+      nextTile' segment = if isStart segment then Nothing else Just (nextTile frame (position segment) (transform segment))
+    in undefined -- unfoldr nextTile' start
 
-candiateTiles :: FrameMat -> Segment -> (Tile, Double)
-candiateTiles = undefined
+nextTile :: FrameMat -> Position -> Transform -> Tile
+nextTile = (((fst . minimumBy (compare `on` snd)) .) .) . candiateTiles
 
-tileOverlap :: FrameMat -> Tile -> Double
-tileOverlap = undefined
+candiateTiles :: FrameMat -> Position -> Transform -> [(Tile, Double)]
+candiateTiles frame p t = map (\tile -> (tile, tileOverlap frame (Segment tile p t))) [Straight ..]
+
+tileOverlap :: FrameMat -> Segment -> Double
+tileOverlap frame segment =
+  let [h, w] = miShape . matInfo $ frame
+      segmentMask = Just . mask (w, h)
+      mean = fromScalar $ fst $ exceptError $ meanStdDev frame (segmentMask segment)
+    in distance zero (mean :: V4 Double)
 
 type MaskMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)
 
