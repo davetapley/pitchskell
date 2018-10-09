@@ -26,7 +26,11 @@ data Segment = Segment
   } deriving (Eq)
 
 instance Show Segment where
-  show (Segment tile p t) = show tile ++ show p ++ show t
+  show (Segment tile p t) =
+    let V2 x y = p
+        V2 t_x t_y = (t !* V2 (-1) 0)
+        angle = round $ 180 + (((atan2 t_y t_x) / pi) * 180)
+      in show tile ++ " " ++ show (round x) ++ "×" ++ show (round y) ++ " " ++ show angle ++ "°"
 
 type Track = Loop.Loop Segment
 

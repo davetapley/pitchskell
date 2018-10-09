@@ -19,19 +19,32 @@ import Data.Word
 import Data.List
 import Data.Function
 
+import Debug.Trace
+
 import Track
+import Loop
 
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
-findTrack :: FrameMat -> Segment -> [Segment]
-findTrack frame start =
-  let (Segment Straight pStart tStart) = start
-      isStart (Segment tile p _) = tile == Straight && distance pStart p < 10
-      nextTile' segment = if isStart segment then Nothing else Just (nextTile frame (position segment) (transform segment))
-    in undefined -- unfoldr nextTile' start
+findTrack :: FrameMat -> Segment -> Track
+findTrack frame start@(Segment Straight pStart tStart) =
+  mkLoop $ take 50 $ unfoldr findNextSegment' (0, start)
 
-nextTile :: FrameMat -> Position -> Transform -> Tile
-nextTile = (((fst . minimumBy (compare `on` snd)) .) .) . candiateTiles
+  where findNextSegment' (n, segment) =
+          if n > 0 && (segment `near` start) then Nothing
+            else Just (segment, (n + 1, findNextSegment frame segment))
+
+(Segment _ pStart tStart) `near` (Segment _ p t) = distance pStart p < 10 && t == tStart
+
+findNextSegment :: FrameMat -> Segment -> Segment
+findNextSegment frame segment =
+  let p = exitPosition segment
+      t = exitTransform segment
+      tile = findNextTile frame p t
+    in Segment tile p t
+
+findNextTile :: FrameMat -> Position -> Transform -> Tile
+findNextTile = (((fst . minimumBy (compare `on` snd)) .) .) . candiateTiles
 
 candiateTiles :: FrameMat -> Position -> Transform -> [(Tile, Double)]
 candiateTiles frame p t = map (\tile -> (tile, tileOverlap frame (Segment tile p t))) [Straight ..]
