@@ -57,6 +57,7 @@ int main( int argc, char** argv )
                matches, img_matches, Scalar::all(-1), Scalar::all(-1),
                std::vector<char>());
 
+  // FIND HOMOGRAPHY
   std::vector<Point2f> obj;
   std::vector<Point2f> scene;
   for( size_t i = 0; i < matches.size(); i++ )
@@ -70,6 +71,7 @@ int main( int argc, char** argv )
      cvError(0,"MatchFinder","no no homography",__FILE__,__LINE__);
   }
 
+  // DRAW HOMOGRAPHY
   std::vector<Point2f> obj_corners(4);
   obj_corners[0] = cvPoint(0,0);
   obj_corners[1] = cvPoint( img_object.cols, 0 );

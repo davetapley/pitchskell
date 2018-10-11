@@ -47,8 +47,27 @@ main = do
   -- DRAW MATCHES
   let imgMatches = exceptError $ drawMatches imgObject keypointsObject imgScene keypointsScene matches def
 
-  -- let (framePts, startPts) = matchPairs frame matches
-  -- homography = exceptError $ findHomography framePts startPts (def { fhpMethod = FindHomographyMethod_RANSAC })
+  -- FIND HOMOGRAPHY
+
+  let (framePts, startPts) =  V.unzip $ V.map (getMatchingPoints keypointsObject keypointsScene) matches
+  let (homography, _) = fromMaybe undefined $ exceptError $ findHomography framePts startPts (def { fhpMethod = FindHomographyMethod_RANSAC })
+
+  let [w, h] = fmap fromIntegral . miShape . matInfo $ imgObject
+  let objCorners = V.fromList [ V2 0 0, V2 h 0, V2 h w, V2 0 w]
+
+  let sceneCorners = V.map ((round <$>) . fromPoint . toPoint) $ perspectiveTransform objCorners homography :: V.Vector (V2 Int32)
+
+  -- DRAW HOMOGRAPHY
+  let green = toScalar (V4 0 255 0 255 :: V4 Double)
+  imgMatchesM <- thaw imgMatches
+
+  let offsetCorner n = (sceneCorners V.! n) + (V2 (round h) 0) -- cheating because we know image is rotated
+  let line' n imgM = line imgM (offsetCorner n) (offsetCorner ((n+1) `mod` 4)) green 4 LineType_AA 0
+  line' 0 imgMatchesM
+  line' 1 imgMatchesM
+  line' 2 imgMatchesM
+  line' 3 imgMatchesM
+  imgMatches <- freeze imgMatchesM
 
   _:_:f <- getArgs
   case f of
@@ -59,3 +78,14 @@ main = do
     [f] -> do
       let bs = exceptError $ imencode (OutputPng defaultPngParams) imgMatches
       B.writeFile f bs
+
+getMatchingPoints :: V.Vector KeyPoint -> V.Vector KeyPoint -> DMatch -> (V2 CDouble, V2 CDouble)
+getMatchingPoints keypointsObject keypointsScene dmatch =
+  let matchRec = dmatchAsRec dmatch
+      queryPt = keypointsObject V.! fromIntegral (dmatchQueryIdx matchRec)
+      trainPt = keypointsScene V.! fromIntegral (dmatchTrainIdx matchRec)
+      queryPtRec = keyPointAsRec queryPt
+      trainPtRec = keyPointAsRec trainPt
+     in (v2ToDouble $ kptPoint queryPtRec, v2ToDouble $ kptPoint trainPtRec)
+  where v2ToDouble = fmap (toCDouble . float2Double)
+
