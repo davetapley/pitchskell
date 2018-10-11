@@ -12,17 +12,20 @@ void readme();
 /* @function main */
 int main( int argc, char** argv )
 {
-  if( argc != 3 )
+  // READ FILES
+  if( !(argc == 3 || argc == 4 ))
   { readme(); return -1; }
   Mat img_object = imread( argv[1]);
   Mat img_scene = imread( argv[2]);
   if( !img_object.data || !img_scene.data )
   { std::cout<< " --(!) Error reading images " << std::endl; return -1; }
 
+  // CREATE DETECTOR
   Ptr<SIFT> detector = SIFT::create();
   std::vector<KeyPoint> keypoints_object, keypoints_scene;
   Mat descriptors_object, descriptors_scene;
 
+  // DETECT KEY POINTS AND DESCRIPTORS
   detector->detectAndCompute( img_object, Mat(), keypoints_object, descriptors_object );
   detector->detectAndCompute( img_scene, Mat(), keypoints_scene, descriptors_scene );
 
@@ -33,6 +36,7 @@ int main( int argc, char** argv )
      cvError(0,"MatchFinder","scene descriptor empty",__FILE__,__LINE__);
   }
 
+  // MATCH
   FlannBasedMatcher matcher;
   std::vector< DMatch > matches;
   matcher.match( descriptors_object, descriptors_scene, matches );
@@ -47,10 +51,11 @@ int main( int argc, char** argv )
   printf("-- Min dist : %f \n", min_dist );
   printf("-- Match count : %i \n", descriptors_object.rows );
 
+  // DRAW MATCHES
   Mat img_matches;
   drawMatches( img_object, keypoints_object, img_scene, keypoints_scene,
                matches, img_matches, Scalar::all(-1), Scalar::all(-1),
-               std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+               std::vector<char>());
 
   std::vector<Point2f> obj;
   std::vector<Point2f> scene;
@@ -59,9 +64,6 @@ int main( int argc, char** argv )
     obj.push_back( keypoints_object[ matches[i].queryIdx ].pt );
     scene.push_back( keypoints_scene[ matches[i].trainIdx ].pt );
   }
-
-  printf("-- POINTS : %f %f \n", obj[0].x, obj[0].y);
-  printf("-- POINTS : %f %f \n", scene[0].x, scene[0].y);
 
   Mat H = findHomography( obj, scene, RANSAC );
   if ( H.empty() ) {
@@ -81,10 +83,14 @@ int main( int argc, char** argv )
   line( img_matches, scene_corners[2] + Point2f( img_object.cols, 0), scene_corners[3] + Point2f( img_object.cols, 0), Scalar( 0, 255, 0), 4 );
   line( img_matches, scene_corners[3] + Point2f( img_object.cols, 0), scene_corners[0] + Point2f( img_object.cols, 0), Scalar( 0, 255, 0), 4 );
 
-  imshow( "Good Matches & Object detection", img_matches );
-  waitKey(0);
-  return 0;
+  if(argc == 3 ) {
+    imshow( "Good Matches & Object detection", img_matches );
+    waitKey(0);
+  } else {
+    imwrite(argv[3], img_matches);
   }
+  return 0;
+}
 
-  void readme()
-  { std::cout << " Usage: ./SIFT_descriptor <img1> <img2>" << std::endl; }
+void readme()
+{ std::cout << " Usage: ./SIFT_descriptor <img1> <img2>" << std::endl; }
