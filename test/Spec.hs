@@ -35,7 +35,7 @@ unitTests = testGroup "Unit tests"
   [ testCase "Can load" $ canLoadVideo
   , testCase "Framegrabber" $ testFrameSizeConsistent
   -- TODO: Speed this up
-  -- , startFiducialTests
+  , startFiducialTests
   , tileMatcherTests
   , testCase "TrackDebug" $ trackDebugTest
   , loopTests
@@ -70,8 +70,8 @@ testFrameSizeConsistent = do
 
 startFiducialTests :: TestTree
 startFiducialTests = testGroup "Start fiducial tests"
-  [ testCase "Start fiducial position" testStartFiducialPosition
-  , testCase "Start fiducial consistency" $ testStartFiducialConsistency
+  [ --testCase "Start fiducial position" testStartFiducialPosition
+  testCase "Start fiducial consistency" $ testStartFiducialConsistency
   ]
 
 --idleNoCarsRotated :: CV.Mat ('S ['D, 'D]) ('S 3) ('S Word8)
@@ -87,34 +87,34 @@ renderImage fp img = do
     let bs = CV.exceptError $ CV.imencode (CV.OutputPng CV.defaultPngParams) img
     B.writeFile fp bs
 
-testStartFiducialPosition :: Assertion
-testStartFiducialPosition = do
-  let startKeypoints = keypoints $ siftMat $ startTile
-  let imgKeypoints = keypoints $ siftMat $ idleNoCarsRotated
-  let matches = flannMatches idleNoCarsRotated
-  let drawn = CV.exceptError $ CV.drawMatches startTile startKeypoints idleNoCarsRotated imgKeypoints matches def
-  renderImage "/tmp/drawMatches.png" drawn
-
-  let (start, img) = matchPairs idleNoCarsRotated matches
-  let points = fromJust $ findCenter idleNoCarsRotated
-  renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCarsRotated points
-
-  let center = points V.! 0
-  let tip = points V.! 1
-  (round <$> center) @?= V2 383 487
-  (round <$> tip) @?= V2 383 430
+-- testStartFiducialPosition :: Assertion
+-- testStartFiducialPosition = do
+--   let startKeypoints = keypoints $ siftMat $ startTile
+--   let imgKeypoints = keypoints $ siftMat $ idleNoCarsRotated
+--   let matches = flannMatches idleNoCarsRotated
+--   let drawn = CV.exceptError $ CV.drawMatches startTile startKeypoints idleNoCarsRotated imgKeypoints matches def
+--   renderImage "/tmp/drawMatches.png" drawn
+--
+--   let (start, img) = matchPairs idleNoCarsRotated matches
+--   let points = fromJust $ findCenter idleNoCarsRotated
+--   renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCarsRotated points
+--
+--   let center = points V.! 0
+--   let tip = points V.! 1
+--   (round <$> center) @?= V2 383 487
+--   (round <$> tip) @?= V2 383 430
 
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
   (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames video
-  let (points :: [V.Vector (V2 Double)]) = map (fromJust . findCenter) frames
+  (points :: [Maybe (V.Vector (V2 Double))]) <- mapM findCenter frames
 
-  let (debugs :: [StartFiducial.FrameMat]) = zipWith drawArrow frames points
+  let (debugs :: [StartFiducial.FrameMat]) = zipWith drawArrow frames (map fromJust points)
 
   let renderFrame n mat = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
   sequence_ $ zipWith renderFrame [0..] debugs
 
-  let centers = fmap (V.! 0) points
+  let centers = fmap (V.! 0) (catMaybes points)
   let mean = sumV centers ^/ 3
   let deltas = fmap ((^-^) mean) centers
   (< (V2 1.0 1.0)) <$> deltas @?= replicate 3 True
