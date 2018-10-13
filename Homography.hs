@@ -81,11 +81,13 @@ main = do
 
 getMatchingPoints :: V.Vector KeyPoint -> V.Vector KeyPoint -> DMatch -> (V2 CDouble, V2 CDouble)
 getMatchingPoints keypointsObject keypointsScene dmatch =
-  let matchRec = dmatchAsRec dmatch
-      queryPt = keypointsObject V.! fromIntegral (dmatchQueryIdx matchRec)
-      trainPt = keypointsScene V.! fromIntegral (dmatchTrainIdx matchRec)
-      queryPtRec = keyPointAsRec queryPt
-      trainPtRec = keyPointAsRec trainPt
-     in (v2ToDouble $ kptPoint queryPtRec, v2ToDouble $ kptPoint trainPtRec)
-  where v2ToDouble = fmap (toCDouble . float2Double)
+  let getObjectIdx = getMatchingPointIdx keypointsObject dmatchQueryIdx dmatch
+      getSceneIdx = getMatchingPointIdx keypointsScene dmatchTrainIdx dmatch
+     in (getObjectIdx, getSceneIdx)
 
+getMatchingPointIdx ::  V.Vector KeyPoint -> (DMatchRec -> Int32) -> DMatch -> V2 CDouble
+getMatchingPointIdx keypoints f dmatch =
+  let matchRec = dmatchAsRec dmatch
+      queryPt = keypoints V.! fromIntegral (f matchRec)
+      queryPtRec = keyPointAsRec queryPt
+     in fmap (toCDouble . float2Double) $ kptPoint queryPtRec
