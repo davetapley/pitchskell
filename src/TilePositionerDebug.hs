@@ -42,3 +42,14 @@ drawHough frame = exceptError $ do
       circles <- houghCircles 1.5 1 Nothing Nothing Nothing Nothing imgG
       for_ circles $ \c -> do
         circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c)) blue 1 LineType_AA 0
+
+inpaintWalls :: FrameMat -> (FrameMat, FrameMat)
+inpaintWalls frame = exceptError $ do
+  frameHSV <- cvtColor bgr hsv frame
+  let lo = toScalar (V4  0  100 0  0   :: V4 Double)
+  let hi = toScalar (V4  10 255 255 255 :: V4 Double)
+  mask <- inRange frameHSV lo hi
+  dilatedMask <- dilate mask Nothing (Nothing :: Maybe Point2i) 2 BorderReplicate
+  maskBGR <- cvtColor gray bgr dilatedMask
+  inpainted <- inpaint 1 InpaintTelea frame dilatedMask
+  pure (maskBGR, inpainted)

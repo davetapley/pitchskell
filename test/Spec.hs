@@ -149,14 +149,20 @@ tileMatcherFindTrack = do
 
 tilePositionerTests :: TestTree
 tilePositionerTests = testGroup "Tile positioner tests"
-  [ testCase "Canny edges" $ tilePositionerCanny
+  [ testCase "Inpaint walls" $ tilePositionerInpaintWalls
+  , testCase "Canny edges" $ tilePositionerCanny
   ]
+
+tilePositionerInpaintWalls :: Assertion
+tilePositionerInpaintWalls = do
+  let (mask, inpainted) = inpaintWalls idleNoCarsRotated
+  renderImage "/tmp/tilePositionerInpaintWallsMask.png" mask
+  renderImage "/tmp/tilePositionerInpaintWalls.png" inpainted
 
 tilePositionerCanny :: Assertion
 tilePositionerCanny = do
   let edgeImg = drawHough idleNoCarsRotated
   renderImage "/tmp/tilePositionerCannyHough.png" edgeImg
-
 
 trackDebugTest :: Assertion
 trackDebugTest = do
