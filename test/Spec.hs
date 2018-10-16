@@ -34,7 +34,6 @@ main = defaultMain unitTests
 unitTests = testGroup "Unit tests"
   [ testCase "Can load" $ canLoadVideo
   , testCase "Framegrabber" $ testFrameSizeConsistent
-  -- TODO: Speed this up
   , startFiducialTests
   , tileMatcherTests
   , testCase "TrackDebug" $ trackDebugTest
@@ -70,8 +69,8 @@ testFrameSizeConsistent = do
 
 startFiducialTests :: TestTree
 startFiducialTests = testGroup "Start fiducial tests"
-  [ --testCase "Start fiducial position" testStartFiducialPosition
-  testCase "Start fiducial consistency" $ testStartFiducialConsistency
+  [ testCase "Start fiducial position" testStartFiducialPosition
+  , testCase "Start fiducial consistency" $ testStartFiducialConsistency
   ]
 
 --idleNoCarsRotated :: CV.Mat ('S ['D, 'D]) ('S 3) ('S Word8)
@@ -87,22 +86,15 @@ renderImage fp img = do
     let bs = CV.exceptError $ CV.imencode (CV.OutputPng CV.defaultPngParams) img
     B.writeFile fp bs
 
--- testStartFiducialPosition :: Assertion
--- testStartFiducialPosition = do
---   let startKeypoints = keypoints $ siftMat $ startTile
---   let imgKeypoints = keypoints $ siftMat $ idleNoCarsRotated
---   let matches = flannMatches idleNoCarsRotated
---   let drawn = CV.exceptError $ CV.drawMatches startTile startKeypoints idleNoCarsRotated imgKeypoints matches def
---   renderImage "/tmp/drawMatches.png" drawn
---
---   let (start, img) = matchPairs idleNoCarsRotated matches
---   let points = fromJust $ findCenter idleNoCarsRotated
---   renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCarsRotated points
---
---   let center = points V.! 0
---   let tip = points V.! 1
---   (round <$> center) @?= V2 383 487
---   (round <$> tip) @?= V2 383 430
+testStartFiducialPosition :: Assertion
+testStartFiducialPosition = do
+  points <- fromJust <$> findCenter idleNoCarsRotated
+  renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCarsRotated points
+
+  let center = points V.! 0
+  let tip = points V.! 1
+  (round <$> center) @?= V2 383 487
+  (round <$> tip) @?= V2 383 430
 
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
