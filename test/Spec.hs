@@ -17,6 +17,7 @@ import StartFiducial
 import StartFiducialDebug
 import TileMatcher
 import qualified TileMatcherDebug
+import TilePositionerDebug
 import qualified Loop
 import qualified Track
 import TrackDebug
@@ -36,6 +37,7 @@ unitTests = testGroup "Unit tests"
   , testCase "Framegrabber" $ testFrameSizeConsistent
   , startFiducialTests
   , tileMatcherTests
+  , tilePositionerTests
   , testCase "TrackDebug" $ trackDebugTest
   , loopTests
   , trackTests
@@ -144,6 +146,17 @@ tileMatcherFindTrack = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
       track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
   TileMatcher.findTrack idleNoCarsRotated start @?= track
+
+tilePositionerTests :: TestTree
+tilePositionerTests = testGroup "Tile positioner tests"
+  [ testCase "Canny edges" $ tilePositionerCanny
+  ]
+
+tilePositionerCanny :: Assertion
+tilePositionerCanny = do
+  let edgeImg = drawHough idleNoCarsRotated
+  renderImage "/tmp/tilePositionerCannyHough.png" edgeImg
+
 
 trackDebugTest :: Assertion
 trackDebugTest = do
