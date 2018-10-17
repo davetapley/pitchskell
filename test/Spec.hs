@@ -151,6 +151,7 @@ tilePositionerTests :: TestTree
 tilePositionerTests = testGroup "Tile positioner tests"
   [ testCase "Inpaint walls" $ tilePositionerInpaintWalls
   , testCase "Canny edges" $ tilePositionerCanny
+  , testCase "Corner radius" $ tilePositionerMinRadius
   ]
 
 tilePositionerInpaintWalls :: Assertion
@@ -161,10 +162,16 @@ tilePositionerInpaintWalls = do
 
 tilePositionerCanny :: Assertion
 tilePositionerCanny = do
-  let edgeImg = drawHough idleNoCarsRotated
+  let t = (V2 (V2 0 (-55)) (V2 (-55) 0))
+  let edgeImg = drawHough t idleNoCarsRotated
   renderImage "/tmp/tilePositionerCannyHough.png" edgeImg
-  let edgeImgInpaint = drawHough . snd . inpaintWalls $ idleNoCarsRotated
+  let edgeImgInpaint = drawHough t . snd . inpaintWalls $ idleNoCarsRotated
   renderImage "/tmp/tilePositionerCannyHoughInpaintedWalls.png" edgeImgInpaint
+
+tilePositionerMinRadius :: Assertion
+tilePositionerMinRadius =
+  let t = (V2 (V2 0 (-55)) (V2 (-55) 0))
+        in (round $ cornerCircleRadius t) @?= 73
 
 trackDebugTest :: Assertion
 trackDebugTest = do
