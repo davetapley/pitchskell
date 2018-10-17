@@ -163,6 +163,8 @@ tilePositionerCanny :: Assertion
 tilePositionerCanny = do
   let edgeImg = drawHough idleNoCarsRotated
   renderImage "/tmp/tilePositionerCannyHough.png" edgeImg
+  let edgeImgInpaint = drawHough . snd . inpaintWalls $ idleNoCarsRotated
+  renderImage "/tmp/tilePositionerCannyHoughInpaintedWalls.png" edgeImgInpaint
 
 trackDebugTest :: Assertion
 trackDebugTest = do

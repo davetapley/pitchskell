@@ -39,17 +39,21 @@ drawHough frame = exceptError $ do
              red 2 LineType_8 0
 
       imgG <- cvtColor bgr gray frame
-      circles <- houghCircles 1.5 1 Nothing Nothing Nothing Nothing imgG
+      circles <- houghCircles 1.575 1 Nothing Nothing Nothing Nothing imgG
       for_ circles $ \c -> do
         circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c)) blue 1 LineType_AA 0
 
 inpaintWalls :: FrameMat -> (FrameMat, FrameMat)
 inpaintWalls frame = exceptError $ do
   frameHSV <- cvtColor bgr hsv frame
-  let lo = toScalar (V4  0  100 0  0   :: V4 Double)
-  let hi = toScalar (V4  10 255 255 255 :: V4 Double)
-  mask <- inRange frameHSV lo hi
-  dilatedMask <- dilate mask Nothing (Nothing :: Maybe Point2i) 2 BorderReplicate
-  maskBGR <- cvtColor gray bgr dilatedMask
-  inpainted <- inpaint 1 InpaintTelea frame dilatedMask
+  let lowLo = toScalar (V4  0  100 0  0   :: V4 Double)
+  let lowHi = toScalar (V4  10 255 255 255 :: V4 Double)
+  let highLo = toScalar (V4  170  100 0  0   :: V4 Double)
+  let highHi = toScalar (V4  180 255 255 255 :: V4 Double)
+  lowMask <- inRange frameHSV lowLo lowHi
+  highMask <- inRange frameHSV highLo highHi
+  fullMask <- lowMask `bitwiseOr` highMask
+
+  maskBGR <- cvtColor gray bgr fullMask
+  inpainted <- inpaint 2 InpaintTelea frame fullMask
   pure (maskBGR, inpainted)
