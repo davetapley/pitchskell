@@ -1,5 +1,6 @@
 module TilePositionerDebug where
 
+import Prelude hiding (lines)
 import Control.Monad.Except(MonadError, void)
 import Control.Monad.Primitive
 import Data.Foldable
@@ -13,9 +14,8 @@ import OpenCV.Extra.XFeatures2d
 import OpenCV.Internal.C.Types
 import OpenCV.ImgProc.FeatureDetection
 
+import TilePositioner
 import Track
-
-type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
 transparent, white, black, blue, green, red :: Scalar
 transparent = toScalar (V4 255 255 255   0 :: V4 Double)
@@ -25,21 +25,14 @@ blue        = toScalar (V4 255   0   0 255 :: V4 Double)
 green       = toScalar (V4   0 255   0 255 :: V4 Double)
 red         = toScalar (V4   0   0 255 255 :: V4 Double)
 
-cornerCircleRadius :: Transform -> Double
-cornerCircleRadius t =
-  let p = V2 0 0
-    in distance p (p + (t !* V2 1.32 0))
-
-drawHough :: Transform -> FrameMat -> FrameMat
-drawHough t frame = exceptError $ do
-  edgeImg <- canny 30 200 Nothing CannyNormL1 frame
-  edgeImgBgr <- cvtColor gray bgr edgeImg
+showHough :: Transform -> FrameMat -> FrameMat
+showHough t frame = exceptError $ do
+  edgesBgr <- cvtColor gray bgr (edges frame)
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
-      edgeImgM <- CV.thaw edgeImg
-      lineSegments <- houghLinesP 1 (pi / 180) 80 (Just 30) (Just 10) edgeImgM
-      void $ matCopyToM imgM (V2 0 0) edgeImgBgr Nothing
-      for_ lineSegments $ \lineSegment -> do
+      void $ matCopyToM imgM (V2 0 0) edgesBgr Nothing
+      lines' <- lines frame
+      for_  lines' $ \lineSegment -> do
         line imgM
              (lineSegmentStart lineSegment)
              (lineSegmentStop  lineSegment)
@@ -48,23 +41,20 @@ drawHough t frame = exceptError $ do
       imgG <- cvtColor bgr gray frame
       let minRadius = round $ cornerCircleRadius t * 0.8
       let maxRadius = round $ cornerCircleRadius t * 1
-      circles <- houghCircles 3 1 Nothing Nothing (Just minRadius) (Just maxRadius) imgG
+      circles <- houghCircles 3.5 1 Nothing Nothing (Just minRadius) (Just maxRadius) imgG
       -- circles <- houghCircles 1.65 1 Nothing Nothing Nothing Nothing imgG
       for_ circles $ \c -> do
         circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c)) blue 1 LineType_AA 0
         circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c / 10 )) green 1 LineType_AA 0
 
-inpaintWalls :: FrameMat -> (FrameMat, FrameMat)
-inpaintWalls frame = exceptError $ do
-  frameHSV <- cvtColor bgr hsv frame
-  let lowLo = toScalar (V4  0  100 0  0   :: V4 Double)
-  let lowHi = toScalar (V4  10 255 255 255 :: V4 Double)
-  let highLo = toScalar (V4  170  100 0  0   :: V4 Double)
-  let highHi = toScalar (V4  180 255 255 255 :: V4 Double)
-  lowMask <- inRange frameHSV lowLo lowHi
-  highMask <- inRange frameHSV highLo highHi
-  fullMask <- lowMask `bitwiseOr` highMask
+showInpaintWalls :: FrameMat -> FrameMat
+showInpaintWalls frame = exceptError $ do
+  let mask = inpaintWallsMask frame
+  maskBGR <- cvtColor gray bgr mask
+  let inpainted = inpaintWalls frame
 
-  maskBGR <- cvtColor gray bgr fullMask
-  inpainted <- inpaint 2 InpaintTelea frame fullMask
-  pure (maskBGR, inpainted)
+  let [h, w] = miShape . matInfo $ frame
+  withMatM (h ::: (w*3) ::: Z) (Proxy :: Proxy (S 3)) (Proxy :: Proxy (S Word8)) transparent $ \imgM -> do
+    matCopyToM imgM (V2 (w*0) 0) frame Nothing
+    matCopyToM imgM (V2 (w*1) 0) maskBGR Nothing
+    matCopyToM imgM (V2 (w*2) 0) inpainted Nothing

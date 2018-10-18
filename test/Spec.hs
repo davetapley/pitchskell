@@ -17,11 +17,12 @@ import StartFiducial
 import StartFiducialDebug
 import TileMatcher
 import qualified TileMatcherDebug
+import TilePositioner as TP
 import TilePositionerDebug
 import qualified Loop
 import qualified Track
-import TrackDebug
 import qualified OpenCV as CV
+import TrackDebug
 import OpenCV.Core.Types.Mat
 import OpenCV.VideoIO.Types
 import qualified Data.Vector as V
@@ -152,26 +153,36 @@ tilePositionerTests = testGroup "Tile positioner tests"
   [ testCase "Inpaint walls" $ tilePositionerInpaintWalls
   , testCase "Canny edges" $ tilePositionerCanny
   , testCase "Corner radius" $ tilePositionerMinRadius
+  , testCase "Lines" $ tilePositionerLines
+  , testCase "Circles" $ tilePositionerCircles
   ]
 
 tilePositionerInpaintWalls :: Assertion
 tilePositionerInpaintWalls = do
-  let (mask, inpainted) = inpaintWalls idleNoCarsRotated
-  renderImage "/tmp/tilePositionerInpaintWallsMask.png" mask
-  renderImage "/tmp/tilePositionerInpaintWalls.png" inpainted
+  renderImage "/tmp/tilePositionerInpaintWalls.png" (showInpaintWalls idleNoCarsRotated)
 
 tilePositionerCanny :: Assertion
 tilePositionerCanny = do
-  let t = (V2 (V2 0 (-55)) (V2 (-55) 0))
-  let edgeImg = drawHough t idleNoCarsRotated
-  renderImage "/tmp/tilePositionerCannyHough.png" edgeImg
-  let edgeImgInpaint = drawHough t . snd . inpaintWalls $ idleNoCarsRotated
-  renderImage "/tmp/tilePositionerCannyHoughInpaintedWalls.png" edgeImgInpaint
+   let t = (V2 (V2 0 (-55)) (V2 (-55) 0))
+   let edgeImg = showHough t idleNoCarsRotated
+   renderImage "/tmp/tilePositionerCannyHough.png" edgeImg
+   let edgeImgInpaint = showHough t . inpaintWalls $ idleNoCarsRotated
+   renderImage "/tmp/tilePositionerCannyHoughInpaintedWalls.png" edgeImgInpaint
 
 tilePositionerMinRadius :: Assertion
 tilePositionerMinRadius =
   let t = (V2 (V2 0 (-55)) (V2 (-55) 0))
         in (round $ cornerCircleRadius t) @?= 73
+
+tilePositionerLines :: Assertion
+tilePositionerLines = do
+  tpLines <- (TP.lines idleNoCarsRotated)
+  V.length tpLines @?= 38
+
+tilePositionerCircles :: Assertion
+tilePositionerCircles =
+  let t = (V2 (V2 0 (-55)) (V2 (-55) 0))
+  in V.length (TP.circles t idleNoCarsRotated) @?= 19
 
 trackDebugTest :: Assertion
 trackDebugTest = do
