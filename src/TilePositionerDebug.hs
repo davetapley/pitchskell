@@ -26,15 +26,21 @@ green       = toScalar (V4   0 255   0 255 :: V4 Double)
 red         = toScalar (V4   0   0 255 255 :: V4 Double)
 
 postitionCircleDebug :: Segment -> FrameMat -> FrameMat
-postitionCircleDebug (Segment Left p t) frame = exceptError $ do
-  let (candidates, others) = V.partition (isCandidateCircle p t) (circles t (inpaintWalls frame))
+postitionCircleDebug (Segment tile p t) frame = exceptError $ do
+  let (candidates, others) = V.partition (isCandidateCircle (Segment tile p t)) (circles t (inpaintWalls frame))
+  let (Segment _ p' _) = positionTile (Segment tile p t) frame
+  let trackWidth = realToFrac $ distance p (p + (t !* V2 1.32 0))
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
     void $ matCopyToM imgM (V2 0 0) frame Nothing
-    for_  candidates $ \c -> do
-      circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c)) blue 1 LineType_AA 0
     for_  others $ \c -> do
       circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c)) red 1 LineType_AA 0
+      circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c / 10 )) red 1 LineType_AA 0
+    for_  candidates $ \c -> do
+      circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c)) blue 1 LineType_AA 0
+      circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c / 10 )) blue 1 LineType_AA 0
+    circle imgM  (round <$> p) (round $ trackWidth / 32.0)  white (-1) LineType_AA 0
+    circle imgM  (round <$> p') (round $ trackWidth / 32.0)  green (-1) LineType_AA 0
 
 showHough :: Transform -> FrameMat -> FrameMat
 showHough t frame = exceptError $ do

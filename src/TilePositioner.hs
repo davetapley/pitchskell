@@ -7,7 +7,7 @@ import Data.Foldable
 import Data.Int
 import Data.Proxy
 import Data.Word
-import Data.Vector
+import Data.Vector as V
 import Linear
 import OpenCV as CV
 import OpenCV.Extra.XFeatures2d
@@ -15,26 +15,33 @@ import OpenCV.Internal.C.Types
 import OpenCV.ImgProc.FeatureDetection
 
 import Track
+import TrackGeometry
 
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
 postitionTiles :: Track -> FrameMat -> Track
 postitionTiles = undefined
 
-isCandidateCircle :: Position -> Transform -> Circle -> Bool
-isCandidateCircle p t c =
-  let trackWidth = distance p (p + (t !* V2 1.32 0))
-    in distance (circleCenter c) (realToFrac <$> p) < (realToFrac trackWidth)
+isCandidateCircle :: Segment -> Circle -> Bool
+isCandidateCircle (Segment tile p t) c =
+  let origin = realToFrac <$> circleOrigin (Segment tile p t)
+      trackWidth = realToFrac $ distance p (p + (t !* V2 1.32 0))
+    in distance (circleCenter c) origin < (trackWidth / 4.0)
 
-postitionTile :: Segment -> FrameMat -> Segment
-postitionTile (Segment Straight p t) frame = Segment Straight p t
+positionTile :: Segment -> FrameMat -> Segment
+positionTile (Segment Straight p t) frame = Segment Straight p t
 
-postitionTile (Segment Left p t) frame =
-  let origin = round <$> (p + (t !* V2 0 (-0.5)))
-      candidateCircles = filter (isCandidateCircle p t) (circles t frame)
-    in Segment Left p t
+positionTile (Segment Left p t) frame =
+  let candidateCircles = filter (isCandidateCircle (Segment Left p t)) (circles t frame)
+      meanCircleOrigin = V.sum (V.map circleCenter candidateCircles) / realToFrac (V.length candidateCircles)
+      meanOrigin = (realToFrac <$> meanCircleOrigin) + (t !* V2 0 (-0.82))
+    in Segment Left (fromIntegral <$> (round <$> meanOrigin)) t
 
-postitionTile (Segment Right p t) frame = Segment Right p t
+positionTile (Segment Right p t) frame =
+  let candidateCircles = filter (isCandidateCircle (Segment Right p t)) (circles t frame)
+      meanCircleOrigin = V.sum (V.map circleCenter candidateCircles) / realToFrac (V.length candidateCircles)
+      meanOrigin = (realToFrac <$> meanCircleOrigin) + (t !* V2 0 (0.82))
+    in Segment Right (fromIntegral <$> (round <$> meanOrigin)) t
 
 type EdgeMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)
 

@@ -156,6 +156,7 @@ tilePositionerTests = testGroup "Tile positioner tests"
   , testCase "Lines" $ tilePositionerLines
   , testCase "Circles" $ tilePositionerCircles
   , testCase "positionLeft" $ tilePositionerLeft
+  , testCase "positionRight" $ tilePositionerRight
   ]
 
 tilePositionerInpaintWalls :: Assertion
@@ -189,7 +190,17 @@ tilePositionerLeft :: Assertion
 tilePositionerLeft = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
       left = (fromJust $ Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 2
+      left' = positionTile left idleNoCarsRotated
+  -- Track.position left' @?= Track.position left
   renderImage "/tmp/tilePositionerLeft.png" $ postitionCircleDebug left idleNoCarsRotated
+
+tilePositionerRight :: Assertion
+tilePositionerRight = do
+  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
+      right = (fromJust $ Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 3
+      right' = positionTile right idleNoCarsRotated
+  -- Track.position right' @?= Track.position right
+  renderImage "/tmp/tilePositionerRight.png" $ postitionCircleDebug right idleNoCarsRotated
 
 trackDebugTest :: Assertion
 trackDebugTest = do

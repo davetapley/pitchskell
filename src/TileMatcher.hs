@@ -22,6 +22,7 @@ import Data.Function
 import Debug.Trace
 
 import Track
+import TrackGeometry
 import Loop
 
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
@@ -87,7 +88,7 @@ renderMask (Segment Straight p t) imgM =
   in fillConvexPoly imgM points white LineType_AA 0
 
 renderMask (Segment Left p t) imgM =
-  let origin = round <$> (p + (t !* V2 0 0.82))
+  let origin = round <$> circleOrigin (Segment Left p t)
       axis = round <$> abs <$> (t !* V2 1.32 1.32)
       innerRadius = round $ distance p (p + (t !* V2 0.32 0))
       V2 x y = (t !* V2 (-1) 0)
@@ -97,7 +98,7 @@ renderMask (Segment Left p t) imgM =
     circle imgM origin innerRadius black (-1) LineType_8 0
 
 renderMask (Segment Right p t) imgM =
-  let origin = round <$> (p + (t !* V2 0 (-0.82)))
+  let origin = round <$> circleOrigin (Segment Right p t)
       axis = round <$> abs <$> (t !* V2 1.32 1.32)
       innerRadius = round $ distance p (p + (t !* V2 0.32 0))
       V2 x y = (t !* V2 1 0)
