@@ -1,6 +1,6 @@
 module TilePositioner where
 
-import Prelude hiding (Left, Right)
+import Prelude hiding (Left, Right, filter)
 import Control.Monad.Except(MonadError, void, lift)
 import Control.Monad.Primitive
 import Data.Foldable
@@ -21,9 +21,19 @@ type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 postitionTiles :: Track -> FrameMat -> Track
 postitionTiles = undefined
 
+isCandidateCircle :: Position -> Transform -> Circle -> Bool
+isCandidateCircle p t c =
+  let trackWidth = distance p (p + (t !* V2 1.32 0))
+    in distance (circleCenter c) (realToFrac <$> p) < (realToFrac trackWidth)
+
 postitionTile :: Segment -> FrameMat -> Segment
 postitionTile (Segment Straight p t) frame = Segment Straight p t
-postitionTile (Segment Left p t) frame = Segment Left p t
+
+postitionTile (Segment Left p t) frame =
+  let origin = round <$> (p + (t !* V2 0 (-0.5)))
+      candidateCircles = filter (isCandidateCircle p t) (circles t frame)
+    in Segment Left p t
+
 postitionTile (Segment Right p t) frame = Segment Right p t
 
 type EdgeMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)

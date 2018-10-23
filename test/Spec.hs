@@ -155,6 +155,7 @@ tilePositionerTests = testGroup "Tile positioner tests"
   , testCase "Corner radius" $ tilePositionerMinRadius
   , testCase "Lines" $ tilePositionerLines
   , testCase "Circles" $ tilePositionerCircles
+  , testCase "positionLeft" $ tilePositionerLeft
   ]
 
 tilePositionerInpaintWalls :: Assertion
@@ -183,6 +184,12 @@ tilePositionerCircles :: Assertion
 tilePositionerCircles =
   let t = (V2 (V2 0 (-55)) (V2 (-55) 0))
   in V.length (TP.circles t idleNoCarsRotated) @?= 19
+
+tilePositionerLeft :: Assertion
+tilePositionerLeft = do
+  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
+      left = (fromJust $ Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 2
+  renderImage "/tmp/tilePositionerLeft.png" $ postitionCircleDebug left idleNoCarsRotated
 
 trackDebugTest :: Assertion
 trackDebugTest = do
