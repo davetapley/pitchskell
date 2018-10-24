@@ -29,7 +29,7 @@ instance Show Segment where
   show (Segment tile p t) =
     let V2 x y = p
         V2 t_x t_y = (t !* V2 (-1) 0)
-        angle = round $ 180 + (((atan2 t_y t_x) / pi) * 180)
+        angle = round $ 180 + atan2 t_y t_x / pi * 180
       in show tile ++ " " ++ show (round x) ++ "×" ++ show (round y) ++ " " ++ show angle ++ "°"
 
 type Track = Loop.Loop Segment
@@ -51,7 +51,7 @@ mkTrack start (Straight : tiles) = Loop.mkLoop $ scanl nextSegment start tiles
 mkTrack _ _ = error "track must start with a straight"
 
 parseTrack :: Segment -> String -> Maybe Track
-parseTrack start = (mkTrack start <$>) . sequence . map parseTile . L.chars
+parseTrack start = (mkTrack start <$>) . mapM parseTile . L.chars
   where parseTile = L.findBy [Straight ..] show
 
 nextSegment :: Segment -> Tile -> Segment
@@ -61,10 +61,10 @@ exitPosition :: Segment -> Position
 exitPosition (Segment tile p t)
   | tile == Straight = p + (t !* V2 1.613 0)
   | tile == Left = p + (t !* V2 0.82 0.82)
-  | tile == Right = p + (t !* V2 (0.82) (-0.82))
+  | tile == Right = p + (t !* V2 0.82 (-0.82))
 
 exitTransform :: Segment -> Transform
 exitTransform (Segment tile p t)
   | tile == Straight = t
-  | tile == Left = (V2 (V2 0 1) (V2 (-1) 0)) !*! t
-  | tile == Right =  (V2 (V2 0 (-1)) (V2 1 0)) !*! t
+  | tile == Left = V2 (V2 0 1) (V2 (-1) 0) !*! t
+  | tile == Right =  V2 (V2 0 (-1)) (V2 1 0) !*! t

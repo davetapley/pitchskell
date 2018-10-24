@@ -53,14 +53,14 @@ getMatchingPointIdx keypoints f dmatch =
   let matchRec = dmatchAsRec dmatch
       queryPt = keypoints V.! fromIntegral (f matchRec)
       queryPtRec = keyPointAsRec queryPt
-     in fmap (toCDouble . float2Double) $ kptPoint queryPtRec
+     in toCDouble . float2Double <$> kptPoint queryPtRec
 
 startTile :: Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 startTile =
     exceptError $ coerceMat $ unsafePerformIO $
       imdecode ImreadUnchanged <$> B.readFile "data/start-tile.png"
 
-tilePoints :: Vector (V2 (CDouble))
+tilePoints :: Vector (V2 CDouble)
 tilePoints =
   let [h, w] = fmap fromIntegral . miShape . matInfo $ startTile
   in V.fromList [ V2 w 0, V2 w h]

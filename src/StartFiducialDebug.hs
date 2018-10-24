@@ -20,13 +20,13 @@ green       = toScalar (V4   0 255   0 255 :: V4 Double)
 red         = toScalar (V4   0   0 255 255 :: V4 Double)
 
 drawArrow :: FrameMat -> Vector (V2 Double) -> FrameMat
-drawArrow frame points = do
+drawArrow frame points =
   let [h, w] = miShape . matInfo $ frame
-    in exceptError $ withMatM (h ::: w ::: Z) (Proxy :: Proxy (S 3)) (Proxy :: Proxy (S Word8))
-               white $ drawArrow' frame points
+    in exceptError $ withMatM (h ::: w ::: Z) (Proxy :: Proxy (S 3)) (Proxy :: Proxy (S Word8)) white $ drawArrow' frame points
+
 drawArrow'
   :: (MonadError CvException m, PrimMonad m)
-  => (Mat ('S '[h, w]) c d)
+  => Mat ('S '[h, w]) c d
   -> Vector (V2 Double)
   -> Mut (Mat ('S '[h, w]) c d) (PrimState m)
   -> m ()

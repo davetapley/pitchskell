@@ -1,5 +1,4 @@
 {-# language DataKinds #-}
-{-# language TemplateHaskell #-}
 
 module FrameGrabber where
 
@@ -30,16 +29,12 @@ getFrames fp = do
     -- So just use the frame count instead.
 
     frameCount <- CV.videoCaptureGetI cap VideoCapPropFrameCount
-    map unsafeCoerceMat <$> catMaybes <$> replicateM (fromIntegral frameCount) (grabRetrieve cap)
+    map unsafeCoerceMat . catMaybes <$> replicateM (fromIntegral frameCount) (grabRetrieve cap)
 
     where grabRetrieve cap = CV.videoCaptureGrab cap >> CV.videoCaptureRetrieve cap
 
 withFrames :: FilePath -> (TestMat -> a) -> IO [a]
-withFrames fp f = do
-    frames <- getFrames fp
-    return $ map f frames
+withFrames fp f =  map f <$> getFrames fp
 
 withFramesM :: FilePath -> (TestMat -> IO a) -> IO [a]
-withFramesM fp f = do
-    frames <- getFrames fp
-    sequence $ map f frames
+withFramesM fp f = mapM f =<< getFrames fp

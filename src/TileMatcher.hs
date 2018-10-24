@@ -80,29 +80,29 @@ renderMask
 renderMask (Segment Straight p t) imgM =
   let origin = round <$> (p + (t !* V2 0 (-0.5)))
       size = round <$> (t !* V2 1.613 1)
-      points = V.fromList $ map (\pt -> (round <$> p + (t !* pt))) [
+      points = V.fromList $ map (\pt -> round <$> p + (t !* pt)) [
         V2 0 (-0.5),
-        V2 0 (0.5),
-        V2 1.613 0.5,
+        V2 0   0.5,
+        V2 1.613   0.5,
         V2 1.613 (-0.5)]
   in fillConvexPoly imgM points white LineType_AA 0
 
 renderMask (Segment Left p t) imgM =
-  let origin = round <$> circleOrigin (Segment Left p t)
-      axis = round <$> abs <$> (t !* V2 1.32 1.32)
+  let origin = round <$> moveToCircleOrigin (Segment Left p t)
+      axis = round . abs <$> (t !* V2 1.32 1.32)
       innerRadius = round $ distance p (p + (t !* V2 0.32 0))
       V2 x y = (t !* V2 (-1) 0)
-      angle = 180 + (((atan2 y x) / pi) * 180)
+      angle = 180 + atan2 y x / pi * 180
   in do
     ellipse imgM origin axis angle 0 90 white (-1) LineType_8 0
     circle imgM origin innerRadius black (-1) LineType_8 0
 
 renderMask (Segment Right p t) imgM =
-  let origin = round <$> circleOrigin (Segment Right p t)
-      axis = round <$> abs <$> (t !* V2 1.32 1.32)
+  let origin = round <$> moveToCircleOrigin (Segment Right p t)
+      axis = round . abs <$> (t !* V2 1.32 1.32)
       innerRadius = round $ distance p (p + (t !* V2 0.32 0))
       V2 x y = (t !* V2 1 0)
-      angle = 180 + (((atan2 y x) / pi) * 180)
+      angle = 180 + atan2 y x / pi * 180
   in do
     ellipse imgM origin axis angle 90 180 white (-1) LineType_8 0
     circle imgM origin innerRadius black (-1) LineType_8 0

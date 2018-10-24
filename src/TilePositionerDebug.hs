@@ -33,12 +33,9 @@ postitionCircleDebug (Segment tile p t) frame = exceptError $ do
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
     void $ matCopyToM imgM (V2 0 0) frame Nothing
-    for_  others $ \c -> do
-      circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c)) red 1 LineType_AA 0
-      circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c / 10 )) red 1 LineType_AA 0
-    for_  candidates $ \c -> do
-      circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c)) blue 1 LineType_AA 0
-      circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c / 10 )) blue 1 LineType_AA 0
+    for_ others $ \c -> circle imgM (round <$> c :: V2 Int32) (round trackWidth) red 1 LineType_AA 0
+    for_ candidates $ \c -> circle imgM (round <$> c :: V2 Int32) (round trackWidth) blue 1 LineType_AA 0
+
     circle imgM  (round <$> p) (round $ trackWidth / 32.0)  white (-1) LineType_AA 0
     circle imgM  (round <$> p') (round $ trackWidth / 32.0)  green (-1) LineType_AA 0
 
@@ -49,15 +46,11 @@ showHough t frame = exceptError $ do
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
       void $ matCopyToM imgM (V2 0 0) edgesBgr Nothing
       lines' <- lines frame
-      for_  lines' $ \lineSegment -> do
-        line imgM
-             (lineSegmentStart lineSegment)
-             (lineSegmentStop  lineSegment)
-             red 2 LineType_8 0
+      for_  lines' $ \lineSegment -> line imgM (lineSegmentStart lineSegment) (lineSegmentStop  lineSegment) red 2 LineType_8 0
 
       imgG <- cvtColor bgr gray frame
-      let minRadius = round $ cornerCircleRadius t * 0.8
-      let maxRadius = round $ cornerCircleRadius t * 1
+      let minRadius = round $ outerCornerCircleRadius t * 0.8
+      let maxRadius = round $ outerCornerCircleRadius t * 1.1
       circles <- houghCircles 3.5 1 Nothing Nothing (Just minRadius) (Just maxRadius) imgG
       -- circles <- houghCircles 1.65 1 Nothing Nothing Nothing Nothing imgG
       for_ circles $ \c -> do
@@ -72,6 +65,6 @@ showInpaintWalls frame = exceptError $ do
 
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: (w*3) ::: Z) (Proxy :: Proxy (S 3)) (Proxy :: Proxy (S Word8)) transparent $ \imgM -> do
-    matCopyToM imgM (V2 (w*0) 0) frame Nothing
-    matCopyToM imgM (V2 (w*1) 0) maskBGR Nothing
+    matCopyToM imgM (V2   0   0) frame Nothing
+    matCopyToM imgM (V2   w   0) maskBGR Nothing
     matCopyToM imgM (V2 (w*2) 0) inpainted Nothing

@@ -18,16 +18,16 @@ someFunc = do
     CV.exceptErrorIO $ CV.videoCaptureOpen cap $ CV.VideoDeviceSource 1 Nothing
     isOpened <- CV.videoCaptureIsOpened cap
 
-    case isOpened of
-      False -> putStrLn "Couldn't open video capture device"
-      True -> do
+    if isOpened then
+      (do
          w <- CV.videoCaptureGetI cap VideoCapPropFrameWidth
          h <- CV.videoCaptureGetI cap VideoCapPropFrameHeight
 
          putStrLn $ "Video size: " ++ show w ++ " x " ++ show h
 
-         CV.withWindow "video" $ \window -> do
-                loop cap window
+         CV.withWindow "video" $ \window -> loop cap window)
+      else putStrLn "Couldn't open video capture device"
+
   where
     loop cap window = do
       _ok <- CV.videoCaptureGrab cap

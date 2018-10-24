@@ -1,6 +1,8 @@
 import Test.Tasty
 import Test.Tasty.HUnit
 
+import Control.Monad
+
 import qualified Data.ByteString as B
 import Data.Default
 import Data.Function
@@ -34,12 +36,12 @@ main :: IO ()
 main = defaultMain unitTests
 
 unitTests = testGroup "Unit tests"
-  [ testCase "Can load" $ canLoadVideo
-  , testCase "Framegrabber" $ testFrameSizeConsistent
+  [ testCase "Can load" canLoadVideo
+  , testCase "Framegrabber" testFrameSizeConsistent
   , startFiducialTests
   , tileMatcherTests
   , tilePositionerTests
-  , testCase "TrackDebug" $ trackDebugTest
+  , testCase "TrackDebug" trackDebugTest
   , loopTests
   , trackTests
   ]
@@ -73,7 +75,7 @@ testFrameSizeConsistent = do
 startFiducialTests :: TestTree
 startFiducialTests = testGroup "Start fiducial tests"
   [ testCase "Start fiducial position" testStartFiducialPosition
-  , testCase "Start fiducial consistency" $ testStartFiducialConsistency
+  , testCase "Start fiducial consistency" testStartFiducialConsistency
   ]
 
 --idleNoCarsRotated :: CV.Mat ('S ['D, 'D]) ('S 3) ('S Word8)
@@ -106,20 +108,20 @@ testStartFiducialConsistency = do
 
   let (debugs :: [StartFiducial.FrameMat]) = zipWith drawArrow frames (map fromJust points)
 
-  let renderFrame n mat = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png") mat
-  sequence_ $ zipWith renderFrame [0..] debugs
+  let renderFrame n = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png")
+  zipWithM_ renderFrame [0..] debugs
 
   let centers = fmap (V.! 0) (catMaybes points)
   let mean = sumV centers ^/ 3
-  let deltas = fmap ((^-^) mean) centers
-  (< (V2 1.0 1.0)) <$> deltas @?= replicate 3 True
+  let deltas = fmap (mean ^-^) centers
+  (< V2 1.0 1.0) <$> deltas @?= replicate 3 True
 
 tileMatcherTests :: TestTree
 tileMatcherTests = testGroup "Tile matcher tests"
-  [ testCase "Straight is a straight" $ tileMatcherStraight
-  , testCase "Left is a left" $ tileMatcherLeft
-  , testCase "Draw track mask" $ tileMatcherDrawTrackMask
-  , testCase "Find track" $ tileMatcherFindTrack
+  [ testCase "Straight is a straight" tileMatcherStraight
+  , testCase "Left is a left" tileMatcherLeft
+  , testCase "Draw track mask" tileMatcherDrawTrackMask
+  , testCase "Find track" tileMatcherFindTrack
   ]
 
 tileMatcherStraight :: Assertion
@@ -150,22 +152,21 @@ tileMatcherFindTrack = do
 
 tilePositionerTests :: TestTree
 tilePositionerTests = testGroup "Tile positioner tests"
-  [ testCase "Inpaint walls" $ tilePositionerInpaintWalls
-  , testCase "Canny edges" $ tilePositionerCanny
-  , testCase "Corner radius" $ tilePositionerMinRadius
-  , testCase "Lines" $ tilePositionerLines
-  , testCase "Circles" $ tilePositionerCircles
-  , testCase "positionLeft" $ tilePositionerLeft
-  , testCase "positionRight" $ tilePositionerRight
+  [ testCase "Inpaint walls" tilePositionerInpaintWalls
+  , testCase "Canny edges" tilePositionerCanny
+  , testCase "Corner radius" tilePositionerMinRadius
+  , testCase "Lines" tilePositionerLines
+  , testCase "Circles" tilePositionerCircles
+  , testCase "positionLeft" tilePositionerLeft
+  , testCase "positionRight" tilePositionerRight
   ]
 
 tilePositionerInpaintWalls :: Assertion
-tilePositionerInpaintWalls = do
-  renderImage "/tmp/tilePositionerInpaintWalls.png" (showInpaintWalls idleNoCarsRotated)
+tilePositionerInpaintWalls = renderImage "/tmp/tilePositionerInpaintWalls.png" (showInpaintWalls idleNoCarsRotated)
 
 tilePositionerCanny :: Assertion
 tilePositionerCanny = do
-   let t = (V2 (V2 0 (-55)) (V2 (-55) 0))
+   let t = V2 (V2 0 (-55)) (V2 (-55) 0)
    let edgeImg = showHough t idleNoCarsRotated
    renderImage "/tmp/tilePositionerCannyHough.png" edgeImg
    let edgeImgInpaint = showHough t . inpaintWalls $ idleNoCarsRotated
@@ -173,23 +174,23 @@ tilePositionerCanny = do
 
 tilePositionerMinRadius :: Assertion
 tilePositionerMinRadius =
-  let t = (V2 (V2 0 (-55)) (V2 (-55) 0))
-        in (round $ cornerCircleRadius t) @?= 73
+  let t = V2 (V2 0 (-55)) (V2 (-55) 0)
+        in round (outerCornerCircleRadius t) @?= 73
 
 tilePositionerLines :: Assertion
 tilePositionerLines = do
-  tpLines <- (TP.lines idleNoCarsRotated)
+  tpLines <- TP.lines idleNoCarsRotated
   V.length tpLines @?= 38
 
 tilePositionerCircles :: Assertion
 tilePositionerCircles =
-  let t = (V2 (V2 0 (-55)) (V2 (-55) 0))
+  let t = V2 (V2 0 (-55)) (V2 (-55) 0)
   in V.length (TP.circles t idleNoCarsRotated) @?= 19
 
 tilePositionerLeft :: Assertion
 tilePositionerLeft = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-      left = (fromJust $ Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 2
+      left = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 2
       left' = positionTile left idleNoCarsRotated
   -- Track.position left' @?= Track.position left
   renderImage "/tmp/tilePositionerLeft.png" $ postitionCircleDebug left idleNoCarsRotated
@@ -197,7 +198,7 @@ tilePositionerLeft = do
 tilePositionerRight :: Assertion
 tilePositionerRight = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-      right = (fromJust $ Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 3
+      right = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 3
       right' = positionTile right idleNoCarsRotated
   -- Track.position right' @?= Track.position right
   renderImage "/tmp/tilePositionerRight.png" $ postitionCircleDebug right idleNoCarsRotated
@@ -210,12 +211,12 @@ trackDebugTest = do
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"
-  [ testCase "mkLoop single" $ mkLoopSingleTest
-  , testCase "mkLoop multiple" $ mkLoopMultipleTest
-  , testCase "mkLoop multiple second" $ mkLoopMultipleSecondTest
-  , testCase "mkLoop multiple last" $ mkLoopMultipleLastTest
-  , testCase "loop unfold" $ loopUnfold
-  , testCase "loop unfold from middle" $ loopUnfoldMiddle
+  [ testCase "mkLoop single" mkLoopSingleTest
+  , testCase "mkLoop multiple" mkLoopMultipleTest
+  , testCase "mkLoop multiple second" mkLoopMultipleSecondTest
+  , testCase "mkLoop multiple last" mkLoopMultipleLastTest
+  , testCase "loop unfold" loopUnfold
+  , testCase "loop unfold from middle" loopUnfoldMiddle
   ]
 
 mkLoopSingleTest :: Assertion
@@ -230,10 +231,7 @@ mkLoopMultipleTest = let
   Loop.Loop end (Loop.Start one) next = loop
   Loop.Loop _ (Loop.Node two) _ = next
   Loop.Loop _ (Loop.Node three) _ = end
-  in do
-    one @?= 1
-    two @?= 2
-    three @?= 3
+  in [one, two, three] @?= [1,2,3]
 
 mkLoopMultipleSecondTest :: Assertion
 mkLoopMultipleSecondTest = let
@@ -242,10 +240,7 @@ mkLoopMultipleSecondTest = let
   Loop.Loop _ (Loop.Start one) _ = left
   Loop.Node two = x
   Loop.Loop _ (Loop.Node three) _ = right
-  in do
-    one @?= 1
-    two @?= 2
-    three @?= 3
+  in [one, two, three] @?= [1,2,3]
 
 mkLoopMultipleLastTest :: Assertion
 mkLoopMultipleLastTest = let
@@ -254,10 +249,7 @@ mkLoopMultipleLastTest = let
   Loop.Loop _ (Loop.Node two) _ = left
   Loop.Node three = x
   Loop.Loop _ (Loop.Start one) _ = right
-  in do
-    two @?= 2
-    three @?= 3
-    one @?= 1
+  in [two, three, one] @?= [2,3, 1]
 
 loopUnfold :: Assertion
 loopUnfold = let
@@ -274,15 +266,15 @@ loopUnfoldMiddle = let
 
 trackTests :: TestTree
 trackTests = testGroup "Track tests"
-  [testCase "parseTrack" $ parseTestTrack
-  , testCase "parseBadTrack" $ parseBadTrack
-  , testCase "start" $ trackStart
-  , testCase "nextSegment" $ trackNextSegment
-  , testCase "parse to length" $ trackLength
-  , testCase "scanl" $ trackScanl
-  , testCase "shows" $ trackShow
-  , testCase "moves" $ trackMoves
-  , testCase "loops" $ trackLoops
+  [testCase "parseTrack" parseTestTrack
+  , testCase "parseBadTrack" parseBadTrack
+  , testCase "start" trackStart
+  , testCase "nextSegment" trackNextSegment
+  , testCase "parse to length" trackLength
+  , testCase "scanl" trackScanl
+  , testCase "shows" trackShow
+  , testCase "moves" trackMoves
+  , testCase "loops" trackLoops
   ]
 
 testTrack = fromJust $ Track.parseTrack Track.start "srrsrr"
@@ -305,7 +297,7 @@ trackNextSegment = let
 
 trackScanl :: Assertion
 trackScanl = let
-  x : y : z : [] = scanl Track.nextSegment Track.start [Track.Right, Track.Right]
+  [x, y, z] = scanl Track.nextSegment Track.start [Track.Right, Track.Right]
   (Track.Segment x_tile x_p x_t) = x
   (Track.Segment y_tile y_p y_t) = y
   (Track.Segment z_tile z_p z_t) = z
@@ -337,7 +329,7 @@ trackShow = let string = concatMap (show . Track.tile) . Loop.unfold $ testTrack
 
 trackMoves :: Assertion
 trackMoves = let
-  lengthNub = length . (nubBy ((==) `on` Track.position)) . Loop.unfold
+  lengthNub = length . nubBy ((==) `on` Track.position) . Loop.unfold
   in lengthNub testTrack @?= Loop.length testTrack
 
 trackLoops :: Assertion

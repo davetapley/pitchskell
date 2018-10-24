@@ -22,25 +22,25 @@ type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 postitionTiles :: Track -> FrameMat -> Track
 postitionTiles = undefined
 
-isCandidateCircle :: Segment -> Circle -> Bool
-isCandidateCircle (Segment tile p t) c =
-  let origin = realToFrac <$> circleOrigin (Segment tile p t)
+isCandidateCircle :: Segment -> CircleCenter -> Bool
+isCandidateCircle (Segment tile p t) center =
+  let origin = realToFrac <$> moveToCircleOrigin (Segment tile p t)
       trackWidth = realToFrac $ distance p (p + (t !* V2 1.32 0))
-    in distance (circleCenter c) origin < (trackWidth / 4.0)
+    in center `distance` origin < (trackWidth / 4.0)
 
 positionTile :: Segment -> FrameMat -> Segment
 positionTile (Segment Straight p t) frame = Segment Straight p t
 
-positionTile (Segment Left p t) frame =
-  let candidateCircles = filter (isCandidateCircle (Segment Left p t)) (circles t frame)
-      meanCircleOrigin = V.sum (V.map circleCenter candidateCircles) / realToFrac (V.length candidateCircles)
+positionTile s@(Segment Left p t) frame =
+  let candidateCircles = filter (isCandidateCircle s) (circles t frame)
+      meanCircleOrigin = V.sum candidateCircles / realToFrac (V.length candidateCircles)
       meanOrigin = (realToFrac <$> meanCircleOrigin) + (t !* V2 0 (-0.82))
     in Segment Left (fromIntegral <$> (round <$> meanOrigin)) t
 
-positionTile (Segment Right p t) frame =
-  let candidateCircles = filter (isCandidateCircle (Segment Right p t)) (circles t frame)
-      meanCircleOrigin = V.sum (V.map circleCenter candidateCircles) / realToFrac (V.length candidateCircles)
-      meanOrigin = (realToFrac <$> meanCircleOrigin) + (t !* V2 0 (0.82))
+positionTile s@(Segment Right p t) frame =
+  let candidateCircles = filter (isCandidateCircle s) (circles t frame)
+      meanCircleOrigin = V.sum candidateCircles / realToFrac (V.length candidateCircles)
+      meanOrigin = moveFromCircleOrigin s meanCircleOrigin
     in Segment Right (fromIntegral <$> (round <$> meanOrigin)) t
 
 type EdgeMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)
@@ -53,17 +53,24 @@ lines frame = do
   imgM <- CV.thaw (edges frame)
   exceptErrorM $ houghLinesP 1 (pi / 180) 80 (Just 30) (Just 10) imgM
 
-cornerCircleRadius :: Transform -> Double
-cornerCircleRadius t =
+outerCornerCircleRadius :: Transform -> Double
+outerCornerCircleRadius t =
   let p = V2 0 0
     in distance p (p + (t !* V2 1.32 0))
 
-circles :: Transform -> FrameMat -> Vector Circle
+type CircleCenter = V2 Double
+
+-- houghCircles returns a float, awkwardly
+toCircleCenter :: Circle -> CircleCenter
+toCircleCenter = (realToFrac <$>) . circleCenter
+
+circles :: Transform -> FrameMat -> Vector CircleCenter
 circles t frame = do
-  let minRadius = round $ cornerCircleRadius t * 0.8
-  let maxRadius = round $ cornerCircleRadius t * 1.01
+  let minRadius = round $ outerCornerCircleRadius t * 0.8
+  let maxRadius = round $ outerCornerCircleRadius t * 1.01
   let imgG = exceptError $ cvtColor bgr gray frame
-  exceptError $ houghCircles 3.5 1 Nothing Nothing (Just minRadius) (Just maxRadius) imgG
+  let circles = houghCircles 3.5 1 Nothing Nothing (Just minRadius) (Just maxRadius) imgG
+  exceptError $ V.map toCircleCenter <$> circles
 
 inpaintWallsMask :: FrameMat -> EdgeMat
 inpaintWallsMask frame = exceptError $ do
