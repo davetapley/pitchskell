@@ -186,15 +186,17 @@ tilePositionerLines = do
 tilePositionerCircles :: Assertion
 tilePositionerCircles =
   let t = V2 (V2 0 (-55)) (V2 (-55) 0)
-  in V.length (TP.circles t idleNoCarsRotated) @?= 36
+  in V.length (TP.circles t idleNoCarsRotated) @?= 48
 
 tilePositionerLeft :: Assertion
 tilePositionerLeft = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
       left = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 2
-      left' = positionTile left idleNoCarsRotated
   distance (positionTile left idleNoCarsRotated) (Track.position left) < trackWidth (Track.transform start) @? "Strayed too far"
   renderImage "/tmp/tilePositionerLeft.png" $ positionCircleDebug left idleNoCarsRotated
+
+  let left = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 4
+  renderImage "/tmp/tilePositionerLeftTwo.png" $ positionCircleDebug left idleNoCarsRotated
 
 tilePositionerRight :: Assertion
 tilePositionerRight = do
@@ -202,6 +204,9 @@ tilePositionerRight = do
       right = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 3
   distance (positionTile right idleNoCarsRotated) (Track.position right) < trackWidth (Track.transform start) @? "Strayed too far"
   renderImage "/tmp/tilePositionerRight.png" $ positionCircleDebug right idleNoCarsRotated
+
+  let right = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 8
+  renderImage "/tmp/tilePositionerRightTwo.png" $ positionCircleDebug right idleNoCarsRotated
 
 trackDebugTest :: Assertion
 trackDebugTest = do

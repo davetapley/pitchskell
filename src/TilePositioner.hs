@@ -48,7 +48,7 @@ candidateCircles segment frame = filter (isCandidateCircle segment) (circles (tr
 isCandidateCircle :: Segment -> CircleCenter -> Bool
 isCandidateCircle (Segment tile p t) center =
   let origin = moveToCircleOrigin (Segment tile p t)
-    in center `distance` origin < (trackWidth t / 4.0)
+    in center `distance` origin < (trackWidth t / 2.0)
 
 -- houghCircles returns a float, awkwardly
 type CircleCenter = V2 Double
@@ -56,12 +56,12 @@ toCircleCenter :: Circle -> CircleCenter
 toCircleCenter = (realToFrac <$>) . circleCenter
 
 circles :: Transform -> FrameMat -> Vector CircleCenter
-circles t frame = do
-  let minRadius = round $ outerCornerCircleRadius t * 0.8
-  let maxRadius = round $ outerCornerCircleRadius t * 1.2
-  let imgG = exceptError $ cvtColor bgr gray (inpaintWalls frame)
-  let circles = houghCircles 3.5 1 Nothing Nothing (Just minRadius) (Just maxRadius) imgG
-  exceptError $ V.map toCircleCenter <$> circles
+circles t frame =
+  let minRadius = round $ outerCornerCircleRadius t * 0.9
+      maxRadius = round $ outerCornerCircleRadius t * 1.1
+      imgG = exceptError $ cvtColor bgr gray frame
+      circles = houghCircles 4 1 Nothing Nothing (Just minRadius) (Just maxRadius) imgG
+  in exceptError $ V.map toCircleCenter <$> circles
 
 inpaintWallsMask :: FrameMat -> EdgeMat
 inpaintWallsMask frame = exceptError $ do
