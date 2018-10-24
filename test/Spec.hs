@@ -23,6 +23,7 @@ import TilePositioner as TP
 import TilePositionerDebug
 import qualified Loop
 import qualified Track
+import TrackGeometry
 import qualified OpenCV as CV
 import TrackDebug
 import OpenCV.Core.Types.Mat
@@ -185,23 +186,22 @@ tilePositionerLines = do
 tilePositionerCircles :: Assertion
 tilePositionerCircles =
   let t = V2 (V2 0 (-55)) (V2 (-55) 0)
-  in V.length (TP.circles t idleNoCarsRotated) @?= 19
+  in V.length (TP.circles t idleNoCarsRotated) @?= 36
 
 tilePositionerLeft :: Assertion
 tilePositionerLeft = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
       left = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 2
       left' = positionTile left idleNoCarsRotated
-  -- Track.position left' @?= Track.position left
-  renderImage "/tmp/tilePositionerLeft.png" $ postitionCircleDebug left idleNoCarsRotated
+  distance (positionTile left idleNoCarsRotated) (Track.position left) < trackWidth (Track.transform start) @? "Strayed too far"
+  renderImage "/tmp/tilePositionerLeft.png" $ positionCircleDebug left idleNoCarsRotated
 
 tilePositionerRight :: Assertion
 tilePositionerRight = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
       right = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 3
-      right' = positionTile right idleNoCarsRotated
-  -- Track.position right' @?= Track.position right
-  renderImage "/tmp/tilePositionerRight.png" $ postitionCircleDebug right idleNoCarsRotated
+  distance (positionTile right idleNoCarsRotated) (Track.position right) < trackWidth (Track.transform start) @? "Strayed too far"
+  renderImage "/tmp/tilePositionerRight.png" $ positionCircleDebug right idleNoCarsRotated
 
 trackDebugTest :: Assertion
 trackDebugTest = do

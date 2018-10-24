@@ -1,8 +1,7 @@
 module TrackGeometry where
 import Prelude hiding (Left, Right)
 import Track
-import Linear.Matrix
-import Linear.V2
+import Linear
 
 relativePosition :: Double -> Double -> Position -> Transform -> Position
 relativePosition y x p t = p + (t !* V2 y x)
@@ -14,3 +13,9 @@ moveToCircleOrigin (Segment Left p t)  = relativePosition 0 0.82 p t
 moveFromCircleOrigin :: Segment -> Position -> Position
 moveFromCircleOrigin (Segment Right _ t) p = relativePosition 0 0.82 p t
 moveFromCircleOrigin (Segment Left _ t) p = relativePosition 0 (-0.82) p t
+
+trackWidth :: Transform -> Double
+trackWidth t = distance (V2 0 0) (t !* V2 1 0)
+
+outerCornerCircleRadius :: Transform -> Double
+outerCornerCircleRadius t = distance (V2 0 0) (t !* V2 1.32 0)

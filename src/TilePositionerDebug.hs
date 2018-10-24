@@ -16,6 +16,7 @@ import OpenCV.ImgProc.FeatureDetection
 
 import TilePositioner
 import Track
+import TrackGeometry
 
 transparent, white, black, blue, green, red :: Scalar
 transparent = toScalar (V4 255 255 255   0 :: V4 Double)
@@ -25,19 +26,17 @@ blue        = toScalar (V4 255   0   0 255 :: V4 Double)
 green       = toScalar (V4   0 255   0 255 :: V4 Double)
 red         = toScalar (V4   0   0 255 255 :: V4 Double)
 
-postitionCircleDebug :: Segment -> FrameMat -> FrameMat
-postitionCircleDebug (Segment tile p t) frame = exceptError $ do
-  let (candidates, others) = V.partition (isCandidateCircle (Segment tile p t)) (circles t (inpaintWalls frame))
-  let (Segment _ p' _) = positionTile (Segment tile p t) frame
-  let trackWidth = realToFrac $ distance p (p + (t !* V2 1.32 0))
+positionCircleDebug :: Segment -> FrameMat -> FrameMat
+positionCircleDebug (Segment tile p t) frame = exceptError $ do
+  let candidates = V.filter (isCandidateCircle (Segment tile p t)) (circles t (inpaintWalls frame))
+  let p' = positionTile (Segment tile p t) frame
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
     void $ matCopyToM imgM (V2 0 0) frame Nothing
-    for_ others $ \c -> circle imgM (round <$> c :: V2 Int32) (round trackWidth) red 1 LineType_AA 0
-    for_ candidates $ \c -> circle imgM (round <$> c :: V2 Int32) (round trackWidth) blue 1 LineType_AA 0
+    for_ candidates $ \c -> circle imgM (round <$> c :: V2 Int32) (round (trackWidth t)) blue 1 LineType_AA 0
 
-    circle imgM  (round <$> p) (round $ trackWidth / 32.0)  white (-1) LineType_AA 0
-    circle imgM  (round <$> p') (round $ trackWidth / 32.0)  green (-1) LineType_AA 0
+    circle imgM  (round <$> p) (round $ trackWidth t / 32.0)  white (-1) LineType_AA 0
+    circle imgM  (round <$> p') (round $ trackWidth t / 32.0)  green (-1) LineType_AA 0
 
 showHough :: Transform -> FrameMat -> FrameMat
 showHough t frame = exceptError $ do
