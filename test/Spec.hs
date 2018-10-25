@@ -99,8 +99,8 @@ testStartFiducialPosition = do
 
   let center = points V.! 0
   let tip = points V.! 1
-  (round <$> center) @?= V2 383 489
-  (round <$> tip) @?= V2 384 431
+  (round <$> center) @?= V2 383 487
+  (round <$> tip) @?= V2 383 430
 
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
@@ -187,7 +187,7 @@ tilePositionerLines = do
 tilePositionerCircles :: Assertion
 tilePositionerCircles =
   let t = V2 (V2 0 (-55)) (V2 (-55) 0)
-  in V.length (TP.circles t idleNoCarsRotated) @?= 48
+  in V.length (TP.circles t idleNoCarsRotated) @?= 16
 
 tilePositionerLeft :: Assertion
 tilePositionerLeft = do
