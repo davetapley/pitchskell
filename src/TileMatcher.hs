@@ -25,6 +25,8 @@ import Track
 import TrackGeometry
 import Loop
 
+import Colors
+
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
 findTrack :: FrameMat -> Segment -> Track
@@ -59,17 +61,11 @@ tileOverlap frame segment =
 
 type MaskMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)
 
-black :: Scalar
-black = toScalar (V4   0   0   0 255 :: V4 Double)
-
 mask :: (Int32, Int32) -> Segment -> MaskMat
 mask (w, h) segment =
   exceptError $
     withMatM (h ::: w ::: Z) (Proxy :: Proxy (S 1)) (Proxy :: Proxy (S Word8)) black $
       renderMask segment
-
-white :: Scalar
-white = toScalar (V4 255 255 255 255 :: V4 Double)
 
 renderMask
   :: (MonadError CvException m, PrimMonad m)

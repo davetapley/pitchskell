@@ -17,8 +17,7 @@ import Linear.V3
 import Linear.V4
 
 import qualified Loop
-
-grey = toScalar (V4   128 128 128 255 :: V4 Double)
+import Colors
 
 drawTrackMask :: FrameMat -> Track -> FrameMat
 drawTrackMask frame track =
@@ -35,7 +34,7 @@ drawTileMasks frame (Segment _ p t) =
       matCopyToM imgM (V2 (w*0) 0) frame Nothing
 
       let copyMask n tile = matCopyToM imgM (V2 (w*n) 0) frame (Just (mask (w, h) (Segment tile p t)))
-          putOverlap n tile = putText imgM (T.pack $ showTileOverlap frame p t tile) (V2 (50+(w*n)) 50) (Font FontHersheySimplex NotSlanted 0.6) white 1 LineType_AA False
+          putOverlap n tile = putText imgM (T.pack $ showTileOverlap frame p t tile) (V2 (50+(w*n)) 50) (Font FontHersheySimplex NotSlanted 0.6) Colors.white 1 LineType_AA False
 
       copyMask 1 Straight
       putOverlap 1 Straight
