@@ -24,7 +24,7 @@ positionCircleDebug frame (Segment tile p t) = exceptError $ do
   let p' = positionTile frame (Segment tile p t)
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
-    void $ matCopyToM imgM (V2 0 0) frame Nothing
+    void $ matCopyToM imgM zero frame Nothing
     let dot = round $ trackWidth t / 32.0
     for_ (candidateCircles (Segment tile p t) frame) $ \c -> circle imgM (round <$> c :: V2 Int32) dot blue 1 LineType_AA 0
 
@@ -36,7 +36,7 @@ showHough t frame = exceptError $ do
   edgesBgr <- cvtColor gray bgr (edges frame)
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
-      void $ matCopyToM imgM (V2 0 0) edgesBgr Nothing
+      void $ matCopyToM imgM zero edgesBgr Nothing
       lines' <- lines frame
       for_  lines' $ \lineSegment -> line imgM (lineSegmentStart lineSegment) (lineSegmentStop  lineSegment) red 2 LineType_8 0
 

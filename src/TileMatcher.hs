@@ -55,7 +55,7 @@ tileOverlap frame segment =
   let [h, w] = miShape . matInfo $ frame
       segmentMask = Just . mask (w, h)
       mean = fromScalar $ fst $ exceptError $ meanStdDev frame (segmentMask segment)
-    in distance zero (mean :: V4 Double)
+    in Linear.norm  (mean :: V4 Double)
 
 type MaskMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)
 
@@ -101,7 +101,7 @@ renderMask (Segment Right p t) imgM =
   let origin = round <$> moveToCircleOrigin (Segment Right p t)
       axis = round . abs <$> (t !* V2 1.32 1.32)
       innerRadius = round $ distance p (p + (t !* V2 0.32 0))
-      V2 x y = (t !* V2 1 0)
+      V2 x y = t !* trackUnitVector
       angle = 180 + atan2 y x / pi * 180
   in do
     ellipse imgM origin axis angle 90 180 white (-1) LineType_8 0

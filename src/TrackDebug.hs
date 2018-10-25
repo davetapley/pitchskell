@@ -34,12 +34,12 @@ drawSegmentArrows
   -> m ()
 
 drawSegmentArrows frame segments imgM = do
-  matCopyToM imgM (V2 0 0) frame Nothing
+  matCopyToM imgM zero frame Nothing
   M.zipWithM_ (drawSegmentArrow imgM) (cycle [red, green, blue]) segments
 
-drawSegmentArrow imgM color (Segment _ p (V2 t0 t1)) = do
+drawSegmentArrow imgM color (Segment _ p t@(V2 t0 t1)) = do
   let a = round <$> p
-  let b = round <$> (p + (V2 t0 t1 !* V2 1 0))
+  let b = round <$> (p + (V2 t0 t1 !* trackUnitVector))
   arrowedLine imgM a b color 1 LineType_AA 0 0.15
   putText' (showV2 a) a
 
@@ -65,7 +65,7 @@ drawOutlines
   -> m ()
 
 drawOutlines frame segments imgM = do
-  matCopyToM imgM (V2 0 0) frame Nothing
+  matCopyToM imgM zero frame Nothing
   M.mapM_ (drawOutline imgM) segments
 
 drawOutline
@@ -109,7 +109,7 @@ drawOutline imgM (Segment Right p t) =
   let origin = round <$> moveToCircleOrigin (Segment Right p t)
       outerAxis = round . abs <$> (t !* V2 1.32 1.32)
       innerAxis = round . abs <$> (t !* V2 0.32 0.32)
-      V2 x y = (t !* V2 1 0)
+      V2 x y = t !* trackUnitVector
       angle = 180 + atan2 y x / pi * 180
       points = V.fromList $ map (\pt -> round <$> p + (t !* pt)) [
         V2 0 (-0.5),

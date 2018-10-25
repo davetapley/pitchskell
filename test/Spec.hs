@@ -318,7 +318,7 @@ trackNextSegment = let
   in do
     tile @?= Track.Right
     p @?= V2 1.613 0
-    t @?= V2 (V2 1 0) (V2 0 1)
+    t @?= V2 (trackUnitVector) (V2 0 1)
 
 trackScanl :: Assertion
 trackScanl = let
@@ -328,16 +328,16 @@ trackScanl = let
   (Track.Segment z_tile z_p z_t) = z
   in do
     x_tile @?= Track.Straight
-    x_p @?= V2 0 0
-    x_t @?= V2 (V2 1 0) (V2 0 1)
+    x_p @?= zero
+    x_t @?= V2 (trackUnitVector) (V2 0 1)
 
     y_tile @?= Track.Right
     y_p @?= V2 1.613 0
-    y_t @?= V2 (V2 1 0) (V2 0 1)
+    y_t @?= V2 (trackUnitVector) (V2 0 1)
 
     z_tile @?= Track.Right
     z_p @?= V2 2.433 (-0.82)
-    z_t @?= V2 (V2 0 (-1)) (V2 1 0)
+    z_t @?= V2 (V2 0 (-1)) (trackUnitVector)
 
 trackStart :: Assertion
 trackStart = let

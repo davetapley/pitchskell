@@ -34,17 +34,17 @@ instance Show Segment where
 
 type Track = Loop.Loop Segment
 
-tBasis :: V2 Double
-tBasis = V2 1 0
+eye :: Transform
+eye = V2 (V2 1 0) (V2 0 1)
 
 start :: Segment
-start = Segment Straight (V2 0 0) (V2 (V2 1 0) (V2 0 1))
+start = Segment Straight zero eye
 
 startFromPT :: Position -> Transform -> Segment
 startFromPT = Segment Straight
 
 --startFromVectors :: V2 (V2 Double) -> Segment
---startFromVectors (V2 a b) = startFromPT a ((b - a) ^/ (V2 1 0))
+--startFromVectors (V2 a b) = startFromPT a ((b - a) ^/ trackUnitVector)
 
 mkTrack :: Segment -> [Tile] -> Track
 mkTrack start (Straight : tiles) = Loop.mkLoop $ scanl nextSegment start tiles

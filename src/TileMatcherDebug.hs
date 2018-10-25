@@ -25,7 +25,7 @@ drawTrackMask frame track =
   let [h, w] = miShape . matInfo $ frame
       segmentMask = Just . mask (w, h)
   in exceptError $ withMatM (h ::: w ::: Z) (Proxy :: Proxy (S 3)) (Proxy :: Proxy (S Word8)) grey $
-    \imgM -> traverse_ (matCopyToM imgM (V2 0 0) frame . segmentMask ) track
+    \imgM -> traverse_ (matCopyToM imgM zero frame . segmentMask ) track
 
 drawTileMasks :: FrameMat -> Segment -> FrameMat
 drawTileMasks frame (Segment _ p t) =

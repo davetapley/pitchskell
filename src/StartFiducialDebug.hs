@@ -25,7 +25,7 @@ drawArrow'
   -> m ()
 
 drawArrow' frame points imgM = do
-  matCopyToM imgM (V2 0 0) frame Nothing
+  matCopyToM imgM zero frame Nothing
   let a = round <$> points ! 0
   let b = round <$> points ! 1
   arrowedLine imgM a b green 1 LineType_AA 0 0.15
