@@ -26,9 +26,9 @@ blue        = toScalar (V4 255   0   0 255 :: V4 Double)
 green       = toScalar (V4   0 255   0 255 :: V4 Double)
 red         = toScalar (V4   0   0 255 255 :: V4 Double)
 
-positionCircleDebug :: Segment -> FrameMat -> FrameMat
-positionCircleDebug (Segment tile p t) frame = exceptError $ do
-  let p' = positionTile (Segment tile p t) frame
+positionCircleDebug :: FrameMat -> Segment -> FrameMat
+positionCircleDebug frame (Segment tile p t) = exceptError $ do
+  let p' = positionTile frame (Segment tile p t)
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
     void $ matCopyToM imgM (V2 0 0) frame Nothing

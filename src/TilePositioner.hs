@@ -14,20 +14,31 @@ import OpenCV.Extra.XFeatures2d
 import OpenCV.Internal.C.Types
 import OpenCV.ImgProc.FeatureDetection
 
+import Loop
 import Track
 import TrackGeometry
 
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
-positionTiles :: Track -> FrameMat -> [Position]
-positionTiles = undefined
+updatePositions :: FrameMat -> Track -> Track
+updatePositions frame = fmap (updatePosition frame)
 
-positionTile :: Segment -> FrameMat -> Position
-positionTile (Segment Straight p t) frame = p
+updatePosition :: FrameMat -> Segment -> Segment
+updatePosition frame segment = segment { position = positionTile frame segment }
 
-positionTile segment frame =
+positionTile :: FrameMat -> Segment -> Position
+positionTile frame (Segment Straight p t) = p
+
+positionTile frame segment =
   let meanCircleOrigin = mean (candidateCircles segment frame)
   in  moveFromCircleOrigin segment meanCircleOrigin
+
+  where
+    -- This should be inverse of TrackGeometry.moveToCircleOrigin,
+    -- but the origin coming back from houghCircles seems to be more 'inwards'.
+    moveFromCircleOrigin :: Segment -> Position -> Position
+    moveFromCircleOrigin (Segment Right _ t) p = relativePosition 0 0.7 p t
+    moveFromCircleOrigin (Segment Left _ t) p = relativePosition 0 (-0.7) p t
 
 mean :: Fractional a => V.Vector a -> a
 mean xs = V.sum xs / realToFrac (V.length xs)

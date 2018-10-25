@@ -42,7 +42,7 @@ unitTests = testGroup "Unit tests"
   , startFiducialTests
   , tileMatcherTests
   , tilePositionerTests
-  , testCase "TrackDebug" trackDebugTest
+  , trackDebugTests
   , loopTests
   , trackTests
   ]
@@ -99,8 +99,8 @@ testStartFiducialPosition = do
 
   let center = points V.! 0
   let tip = points V.! 1
-  (round <$> center) @?= V2 383 487
-  (round <$> tip) @?= V2 383 430
+  (round <$> center) @?= V2 383 489
+  (round <$> tip) @?= V2 384 431
 
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
@@ -160,6 +160,7 @@ tilePositionerTests = testGroup "Tile positioner tests"
   , testCase "Circles" tilePositionerCircles
   , testCase "positionLeft" tilePositionerLeft
   , testCase "positionRight" tilePositionerRight
+  , testCase "track" tilePositionerTrack
   ]
 
 tilePositionerInpaintWalls :: Assertion
@@ -192,27 +193,46 @@ tilePositionerLeft :: Assertion
 tilePositionerLeft = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
       left = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 2
-  distance (positionTile left idleNoCarsRotated) (Track.position left) < trackWidth (Track.transform start) @? "Strayed too far"
-  renderImage "/tmp/tilePositionerLeft.png" $ positionCircleDebug left idleNoCarsRotated
+  distance (positionTile idleNoCarsRotated left ) (Track.position left) < trackWidth (Track.transform start) @? "Strayed too far"
+  renderImage "/tmp/tilePositionerLeft.png" $ positionCircleDebug idleNoCarsRotated left
 
   let left = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 4
-  renderImage "/tmp/tilePositionerLeftTwo.png" $ positionCircleDebug left idleNoCarsRotated
+  renderImage "/tmp/tilePositionerLeftTwo.png" $ positionCircleDebug idleNoCarsRotated left
 
 tilePositionerRight :: Assertion
 tilePositionerRight = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
       right = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 3
-  distance (positionTile right idleNoCarsRotated) (Track.position right) < trackWidth (Track.transform start) @? "Strayed too far"
-  renderImage "/tmp/tilePositionerRight.png" $ positionCircleDebug right idleNoCarsRotated
+  distance (positionTile idleNoCarsRotated right) (Track.position right) < trackWidth (Track.transform start) @? "Strayed too far"
+  renderImage "/tmp/tilePositionerRight.png" $ positionCircleDebug idleNoCarsRotated right
 
   let right = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 8
-  renderImage "/tmp/tilePositionerRightTwo.png" $ positionCircleDebug right idleNoCarsRotated
+  renderImage "/tmp/tilePositionerRightTwo.png" $ positionCircleDebug idleNoCarsRotated right
 
-trackDebugTest :: Assertion
-trackDebugTest = do
+tilePositionerTrack :: Assertion
+tilePositionerTrack = do
+  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-58)) (V2 (-58) 0))
+      track = fromJust (Track.parseTrack start "sslrlsllrsslrlls")
+  renderImage "/tmp/tilePositionerTrackMask.png" $ TileMatcherDebug.drawTrackMask idleNoCarsRotated (updatePositions idleNoCarsRotated track)
+  renderImage "/tmp/tilePositionerTrackOutline.png" $ drawTrackOutline idleNoCarsRotated (updatePositions idleNoCarsRotated track)
+
+trackDebugTests :: TestTree
+trackDebugTests = testGroup "TrackDebug tests"
+  [ testCase "drawTrack" trackDebugArrows
+  , testCase "outline" trackDebugOutline
+  ]
+
+trackDebugArrows :: Assertion
+trackDebugArrows = do
   let track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
-      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-  renderImage "/tmp/trackDebug.png" $ drawTrack idleNoCarsRotated track
+      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-57)) (V2 (-57) 0))
+  renderImage "/tmp/trackArrows.png" $ drawTrackArrows idleNoCarsRotated track
+
+trackDebugOutline :: Assertion
+trackDebugOutline = do
+  let track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
+      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-57)) (V2 (-57) 0))
+  renderImage "/tmp/trackOutline.png" $ drawTrackOutline idleNoCarsRotated track
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"
