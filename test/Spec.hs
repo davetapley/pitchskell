@@ -30,6 +30,8 @@ import OpenCV.Core.Types.Mat
 import OpenCV.VideoIO.Types
 import qualified Data.Vector as V
 
+import qualified Video
+
 
 import System.IO.Unsafe ( unsafePerformIO )
 
@@ -37,8 +39,7 @@ main :: IO ()
 main = defaultMain unitTests
 
 unitTests = testGroup "Unit tests"
-  [ testCase "Can load" canLoadVideo
-  , testCase "Framegrabber" testFrameSizeConsistent
+  [ Video.tests
   , startFiducialTests
   , tileMatcherTests
   , tilePositionerTests
@@ -46,32 +47,6 @@ unitTests = testGroup "Unit tests"
   , loopTests
   , trackTests
   ]
-
-video :: FilePath
-video = "test/video/idle-no-cars-0-3-frames.mp4"
-
-canLoadVideo :: Assertion
-canLoadVideo = do
-    cap <- FrameGrabber.withFile video
-
-    isOpened <- CV.videoCaptureIsOpened cap
-    isOpened @?= True
-
-    w <- CV.videoCaptureGetI cap VideoCapPropFrameWidth
-    w @?= 720
-
-    canGrab <- CV.videoCaptureGrab cap
-    canGrab @?= True
-
-    aFrame <- CV.videoCaptureRetrieve cap
-    isJust aFrame @?= True
-
-    (miShape . matInfo $ fromJust aFrame) @?= [480,720]
-
-testFrameSizeConsistent :: Assertion
-testFrameSizeConsistent = do
-  infos <- FrameGrabber.withFrames video matInfo
-  length infos @?= 3
 
 startFiducialTests :: TestTree
 startFiducialTests = testGroup "Start fiducial tests"
@@ -101,6 +76,9 @@ testStartFiducialPosition = do
   let tip = points V.! 1
   (round <$> center) @?= V2 383 487
   (round <$> tip) @?= V2 383 430
+
+video :: FilePath
+video = "test/video/idle-no-cars-0-3-frames.mp4"
 
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
