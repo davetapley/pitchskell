@@ -1,0 +1,3 @@
+/Users/dtapley/dev/pitchskell/opencv-sandbox/homography/CMakeFiles/rebuild_cache.dir
+/Users/dtapley/dev/pitchskell/opencv-sandbox/homography/CMakeFiles/edit_cache.dir
+/Users/dtapley/dev/pitchskell/opencv-sandbox/homography/CMakeFiles/Homography.dir
