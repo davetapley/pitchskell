@@ -15,8 +15,9 @@ import Linear.Vector
 
 import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified FrameGrabber
-import StartFiducial
+import StartFiducial as SF
 import StartFiducialDebug
+import TileJoin as TJ
 import TileMatcher
 import qualified TileMatcherDebug
 import TilePositioner as TP
@@ -69,7 +70,7 @@ renderImage fp img = do
 
 testStartFiducialPosition :: Assertion
 testStartFiducialPosition = do
-  points <- fromJust <$> findCenter idleNoCarsRotated
+  points <- fromJust <$> SF.findCenter idleNoCarsRotated
   renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCarsRotated points
 
   let center = points V.! 0
@@ -77,15 +78,18 @@ testStartFiducialPosition = do
   (round <$> center) @?= V2 383 487
   (round <$> tip) @?= V2 383 430
 
+  points <- fromJust <$> TJ.findCenter idleNoCarsRotated
+  renderImage "/tmp/drawCenterTJ.png" $ drawArrow idleNoCarsRotated points
+
 video :: FilePath
 video = "test/video/idle-no-cars-0-3-frames.mp4"
 
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
   (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames video
-  (points :: [Maybe (V.Vector (V2 Double))]) <- mapM findCenter frames
+  (points :: [Maybe (V.Vector (V2 Double))]) <- mapM SF.findCenter frames
 
-  let (debugs :: [StartFiducial.FrameMat]) = zipWith drawArrow frames (map fromJust points)
+  let (debugs :: [SF.FrameMat]) = zipWith drawArrow frames (map fromJust points)
 
   let renderFrame n = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png")
   zipWithM_ renderFrame [0..] debugs
