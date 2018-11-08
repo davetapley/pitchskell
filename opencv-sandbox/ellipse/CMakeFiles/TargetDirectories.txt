@@ -1,0 +1,3 @@
+/Users/dtapley/dev/pitchskell/opencv-sandbox/ellipse/CMakeFiles/rebuild_cache.dir
+/Users/dtapley/dev/pitchskell/opencv-sandbox/ellipse/CMakeFiles/edit_cache.dir
+/Users/dtapley/dev/pitchskell/opencv-sandbox/ellipse/CMakeFiles/Ellipse.dir
