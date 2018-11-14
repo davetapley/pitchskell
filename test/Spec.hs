@@ -193,7 +193,7 @@ tilePositionerRight = do
 
 tilePositionerTrack :: Assertion
 tilePositionerTrack = do
-  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-58)) (V2 (-58) 0))
+  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
       track = fromJust (Track.parseTrack start "sslrlsllrsslrlls")
   renderImage "/tmp/tilePositionerTrackMask.png" $ TileMatcherDebug.drawTrackMask idleNoCarsRotated (updatePositions idleNoCarsRotated track)
   renderImage "/tmp/tilePositionerTrackOutline.png" $ drawTrackOutline idleNoCarsRotated (updatePositions idleNoCarsRotated track)
@@ -207,13 +207,13 @@ trackDebugTests = testGroup "TrackDebug tests"
 trackDebugArrows :: Assertion
 trackDebugArrows = do
   let track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
-      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-57)) (V2 (-57) 0))
+      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
   renderImage "/tmp/trackArrows.png" $ drawTrackArrows idleNoCarsRotated track
 
 trackDebugOutline :: Assertion
 trackDebugOutline = do
   let track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
-      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-57)) (V2 (-57) 0))
+      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
   renderImage "/tmp/trackOutline.png" $ drawTrackOutline idleNoCarsRotated track
 
 loopTests :: TestTree
