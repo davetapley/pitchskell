@@ -70,7 +70,7 @@ mask (w, h) segment =
 renderMask
   :: (MonadError CvException m, PrimMonad m)
   => Segment
-  -> Mut (Mat ('S '[h, w]) c d) (PrimState m)
+  -> Mut MaskMat (PrimState m)
   -> m ()
 
 renderMask (Segment Straight p t) imgM =
