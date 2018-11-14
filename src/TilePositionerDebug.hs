@@ -41,10 +41,10 @@ showHough t frame = exceptError $ do
       for_  lines' $ \lineSegment -> line imgM (lineSegmentStart lineSegment) (lineSegmentStop  lineSegment) red 2 LineType_8 0
 
       imgG <- cvtColor bgr gray frame
-      let minRadius = round $ outerCornerCircleRadius t * 0.9
-      let maxRadius = round $ outerCornerCircleRadius t * 1.1
+      let minRadius = round $ innerCornerCircleRadius t * 0.95
+      let maxRadius = round $ innerCornerCircleRadius t * 1.05
       let dot = round $ trackWidth t / 32.0
-      circles' <- houghCircles 4 1 Nothing Nothing (Just minRadius) (Just maxRadius) imgG
+      circles' <- houghCircles 2 1 Nothing (Just 20) (Just minRadius) (Just maxRadius) imgG
       for_ circles' $ \c -> do
         circle imgM (round <$> circleCenter c :: V2 Int32) (round (circleRadius c)) blue 1 LineType_AA 0
         circle imgM (round <$> circleCenter c :: V2 Int32) dot green (-1) LineType_AA 0

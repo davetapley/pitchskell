@@ -37,8 +37,8 @@ positionTile frame segment =
     -- This should be inverse of TrackGeometry.moveToCircleOrigin,
     -- but the origin coming back from houghCircles seems to be more 'inwards'.
     moveFromCircleOrigin :: Segment -> Position -> Position
-    moveFromCircleOrigin (Segment Right _ t) p = relativePosition 0 0.7 p t
-    moveFromCircleOrigin (Segment Left _ t) p = relativePosition 0 (-0.7) p t
+    moveFromCircleOrigin (Segment Right _ t) p = relativePosition 0 0.82 p t
+    moveFromCircleOrigin (Segment Left _ t) p = relativePosition 0 (-0.82) p t
 
 mean :: Fractional a => V.Vector a -> a
 mean xs = V.sum xs / realToFrac (V.length xs)
@@ -68,10 +68,10 @@ toCircleCenter = (realToFrac <$>) . circleCenter
 
 circles :: Transform -> FrameMat -> Vector CircleCenter
 circles t frame =
-  let minRadius = round $ outerCornerCircleRadius t * 0.9
-      maxRadius = round $ outerCornerCircleRadius t * 1.1
+  let minRadius = round $ innerCornerCircleRadius t * 0.9
+      maxRadius = round $ innerCornerCircleRadius t * 1.1
       imgG = exceptError $ cvtColor bgr gray frame
-      circles = houghCircles 4 1 Nothing Nothing (Just minRadius) (Just maxRadius) imgG
+      circles = houghCircles 2 1 Nothing (Just 20) (Just minRadius) (Just maxRadius) imgG
   in exceptError $ V.map toCircleCenter <$> circles
 
 inpaintWallsMask :: FrameMat -> EdgeMat

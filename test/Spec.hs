@@ -159,7 +159,7 @@ tilePositionerCanny = do
 tilePositionerMinRadius :: Assertion
 tilePositionerMinRadius =
   let t = V2 (V2 0 (-55)) (V2 (-55) 0)
-        in round (outerCornerCircleRadius t) @?= 73
+        in round (innerCornerCircleRadius t) @?= 18
 
 tilePositionerLines :: Assertion
 tilePositionerLines = do
@@ -169,7 +169,7 @@ tilePositionerLines = do
 tilePositionerCircles :: Assertion
 tilePositionerCircles =
   let t = V2 (V2 0 (-55)) (V2 (-55) 0)
-  in V.length (TP.circles t idleNoCarsRotated) @?= 16
+  in V.length (TP.circles t idleNoCarsRotated) @?= 30
 
 tilePositionerLeft :: Assertion
 tilePositionerLeft = do
