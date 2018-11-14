@@ -85,8 +85,8 @@ renderMask (Segment Straight p t) imgM =
 
 renderMask (Segment Left p t) imgM =
   let origin = round <$> moveToCircleOrigin (Segment Left p t)
-      axis = round . abs <$> (t !* V2 1.32 1.32)
-      innerRadius = round $ distance p (p + (t !* V2 0.32 0))
+      axis = pure $ round $ outerCornerCircleRadius t :: V2 Int32
+      innerRadius = round $ innerCornerCircleRadius t
       V2 x y = (t !* V2 (-1) 0)
       angle = 180 + atan2 y x / pi * 180
   in do
@@ -95,8 +95,8 @@ renderMask (Segment Left p t) imgM =
 
 renderMask (Segment Right p t) imgM =
   let origin = round <$> moveToCircleOrigin (Segment Right p t)
-      axis = round . abs <$> (t !* V2 1.32 1.32)
-      innerRadius = round $ distance p (p + (t !* V2 0.32 0))
+      axis = pure $ round $ outerCornerCircleRadius t :: V2 Int32
+      innerRadius = round $ innerCornerCircleRadius t
       V2 x y = t !* trackUnitVector
       angle = 180 + atan2 y x / pi * 180
   in do

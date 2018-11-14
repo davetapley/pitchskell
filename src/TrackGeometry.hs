@@ -18,7 +18,7 @@ trackWidth :: Transform -> Double
 trackWidth t = norm (t !* trackUnitVector)
 
 innerCornerCircleRadius :: Transform -> Double
-innerCornerCircleRadius t = norm (t !* V2 1.32 0)
+innerCornerCircleRadius t = norm (t !* V2 0.32 0)
 
 outerCornerCircleRadius :: Transform -> Double
 outerCornerCircleRadius t = norm (t !* V2 1.32 0)
