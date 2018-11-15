@@ -46,12 +46,12 @@ mean xs = V.sum xs / realToFrac (V.length xs)
 
 type EdgeMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)
 
-edges :: FrameMat -> EdgeMat
-edges frame = exceptError $ canny 30 200 Nothing CannyNormL1 frame
+toEdges :: FrameMat -> EdgeMat
+toEdges frame = exceptError $ canny 30 200 Nothing CannyNormL1 frame
 
 lines :: FrameMat -> Vector (LineSegment Int32)
 lines frame = unsafePerformIO $ do
-  imgM <- CV.thaw (edges frame)
+  imgM <- CV.thaw (toEdges frame)
   exceptErrorM $ houghLinesP 1 (pi / 180) 80 (Just 30) (Just 10) imgM
 
 candidateCircles :: Segment -> FrameMat -> Vector CircleCenter

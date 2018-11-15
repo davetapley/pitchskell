@@ -33,7 +33,7 @@ positionCircleDebug frame (Segment tile p t) = exceptError $ do
 
 showHough :: Transform -> FrameMat -> FrameMat
 showHough t frame = exceptError $ do
-  edgesBgr <- cvtColor gray bgr (edges frame)
+  edgesBgr <- cvtColor gray bgr (toEdges frame)
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
       void $ matCopyToM imgM zero edgesBgr Nothing
