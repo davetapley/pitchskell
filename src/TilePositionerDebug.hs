@@ -37,7 +37,7 @@ showHough t frame = exceptError $ do
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
       void $ matCopyToM imgM zero edgesBgr Nothing
-      lines' <- lines frame
+      let lines' = lines frame
       for_  lines' $ \lineSegment -> line imgM (lineSegmentStart lineSegment) (lineSegmentStop  lineSegment) red 2 LineType_8 0
 
       imgG <- cvtColor bgr gray frame

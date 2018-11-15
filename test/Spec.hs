@@ -163,7 +163,7 @@ tilePositionerMinRadius =
 
 tilePositionerLines :: Assertion
 tilePositionerLines = do
-  tpLines <- TP.lines idleNoCarsRotated
+  let tpLines = TP.lines idleNoCarsRotated
   V.length tpLines @?= 38
 
 tilePositionerCircles :: Assertion

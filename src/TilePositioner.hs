@@ -13,6 +13,7 @@ import OpenCV as CV
 import OpenCV.Extra.XFeatures2d
 import OpenCV.Internal.C.Types
 import OpenCV.ImgProc.FeatureDetection
+import System.IO.Unsafe ( unsafePerformIO )
 
 import Loop
 import Track
@@ -48,8 +49,8 @@ type EdgeMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)
 edges :: FrameMat -> EdgeMat
 edges frame = exceptError $ canny 30 200 Nothing CannyNormL1 frame
 
-lines :: (PrimMonad m) => FrameMat -> m (Vector (LineSegment Int32))
-lines frame = do
+lines :: FrameMat -> Vector (LineSegment Int32)
+lines frame = unsafePerformIO $ do
   imgM <- CV.thaw (edges frame)
   exceptErrorM $ houghLinesP 1 (pi / 180) 80 (Just 30) (Just 10) imgM
 
