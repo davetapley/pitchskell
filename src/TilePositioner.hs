@@ -58,6 +58,7 @@ candidateCircles :: Segment -> FrameMat -> Vector CircleCenter
 candidateCircles segment frame = filter (isCandidateCircle segment) (circles (transform segment) frame)
 
 isCandidateCircle :: Segment -> CircleCenter -> Bool
+isCandidateCircle (Segment Straight _ _) _ = error "Expect Left or Right"
 isCandidateCircle (Segment tile p t) center =
   let origin = moveToCircleOrigin (Segment tile p t)
     in center `distance` origin < (trackWidth t / 2.0)
