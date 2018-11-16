@@ -19,6 +19,25 @@ import Track
 import TrackGeometry
 import Colors
 
+-- candidateLines :: Segment -> FrameMat -> Vector (LineSegment Int32, StraightEdge)
+
+positionLineDebug :: FrameMat -> Segment -> FrameMat
+positionLineDebug frame (Segment tile p t) = exceptError $ do
+  let p' = positionTile frame (Segment tile p t)
+  let [h, w] = miShape . matInfo $ frame
+  withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
+    void $ matCopyToM imgM zero frame Nothing
+    let dot = round $ trackWidth t / 32.0
+    for_ (candidateLines (Segment tile p t) frame) $
+      \(lineSegment, edge) -> line imgM (lineSegmentStart lineSegment) (lineSegmentStop  lineSegment) (edgeColor edge) 2 LineType_8 0
+
+    circle imgM  (round <$> p) dot white (-1) LineType_AA 0
+    circle imgM  (round <$> p') dot green (-1) LineType_AA 0
+
+  where
+    edgeColor (LeftEdge{}) = green
+    edgeColor (RightEdge{}) = red
+
 positionCircleDebug :: FrameMat -> Segment -> FrameMat
 positionCircleDebug frame (Segment tile p t) = exceptError $ do
   let p' = positionTile frame (Segment tile p t)

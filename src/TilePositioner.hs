@@ -1,6 +1,6 @@
 module TilePositioner where
 
-import Prelude hiding (Left, Right, filter)
+import Prelude hiding (Left, Right, filter, lines)
 import Control.Monad.Except(MonadError, void, lift)
 import Control.Monad.Primitive
 import Data.Foldable
@@ -45,6 +45,25 @@ mean :: Fractional a => V.Vector a -> a
 mean xs = V.sum xs / realToFrac (V.length xs)
 
 type EdgeMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)
+
+candidateLines :: Segment -> FrameMat -> Vector (LineSegment Int32, StraightEdge)
+candidateLines segment frame = V.mapMaybe (\line -> (,) line <$> (isCandidateLine segment line) ) (lines frame)
+
+isCandidateLine :: Segment -> LineSegment Int32 -> Maybe StraightEdge
+isCandidateLine (Segment Straight p t) line =
+  let edges  = straightEdges (Segment Straight p t)
+      maxDist = trackWidth t / 4.0
+  in V.find (\edge -> (lineDistance line (straightEdgeStart edge) < maxDist) && (lineDistance line (straightEdgeStop edge) < maxDist)) edges
+
+isCandidateLine (Segment _ _ _) _ = error "Expect Straight"
+
+-- https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
+lineDistance :: LineSegment Int32 -> V2 Double -> Double
+lineDistance (LineSegment start end) (V2 x0 y0) =
+  let (V2 x1 y1) = realToFrac <$> start
+      (V2 x2 y2) = realToFrac <$> end
+    in abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1) /
+      sqrt(((y2 - y1) ** 2) + ((x2 - x1) ** 2))
 
 toEdges :: FrameMat -> EdgeMat
 toEdges frame = exceptError $ canny 30 200 Nothing CannyNormL1 frame

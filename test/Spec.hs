@@ -140,6 +140,7 @@ tilePositionerTests = testGroup "Tile positioner tests"
   , testCase "Corner radius" tilePositionerMinRadius
   , testCase "Lines" tilePositionerLines
   , testCase "Circles" tilePositionerCircles
+  , testCase "positionStraight" tilePositionerStraight
   , testCase "positionLeft" tilePositionerLeft
   , testCase "positionRight" tilePositionerRight
   , testCase "track" tilePositionerTrack
@@ -170,6 +171,16 @@ tilePositionerCircles :: Assertion
 tilePositionerCircles =
   let t = V2 (V2 0 (-55)) (V2 (-55) 0)
   in V.length (TP.circles t idleNoCarsRotated) @?= 30
+
+tilePositionerStraight :: Assertion
+tilePositionerStraight = do
+  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
+      straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 1
+  distance (positionTile idleNoCarsRotated straight ) (Track.position straight) < trackWidth (Track.transform start) @? "Strayed too far"
+  renderImage "/tmp/tilePositionerStraight.png" $ positionLineDebug idleNoCarsRotated straight
+
+  let straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 5
+  renderImage "/tmp/tilePositionerStraightTwo.png" $ positionLineDebug idleNoCarsRotated straight
 
 tilePositionerLeft :: Assertion
 tilePositionerLeft = do
