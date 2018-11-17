@@ -182,6 +182,15 @@ tilePositionerStraight = do
   let straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 5
   renderImage "/tmp/tilePositionerStraightTwo.png" $ positionLineDebug idleNoCarsRotated straight
 
+  let straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 9
+  renderImage "/tmp/tilePositionerStraightThree.png" $ positionLineDebug idleNoCarsRotated straight
+
+  let straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 10
+  renderImage "/tmp/tilePositionerStraightFour.png" $ positionLineDebug idleNoCarsRotated straight
+
+  let straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 15
+  renderImage "/tmp/tilePositionerStraightFive.png" $ positionLineDebug idleNoCarsRotated straight
+
 tilePositionerLeft :: Assertion
 tilePositionerLeft = do
   let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))

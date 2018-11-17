@@ -18,12 +18,12 @@ import TilePositioner
 import Track
 import TrackGeometry
 import Colors
-
--- candidateLines :: Segment -> FrameMat -> Vector (LineSegment Int32, StraightEdge)
+import TrackDebug(drawSegmentArrow)
 
 positionLineDebug :: FrameMat -> Segment -> FrameMat
 positionLineDebug frame (Segment tile p t) = exceptError $ do
   let p' = positionTile frame (Segment tile p t)
+  let t' = transformTile frame (Segment tile p t)
   let [h, w] = miShape . matInfo $ frame
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
     void $ matCopyToM imgM zero frame Nothing
@@ -32,11 +32,13 @@ positionLineDebug frame (Segment tile p t) = exceptError $ do
       \(lineSegment, edge) -> line imgM (lineSegmentStart lineSegment) (lineSegmentStop  lineSegment) (edgeColor edge) 2 LineType_8 0
 
     circle imgM  (round <$> p) dot white (-1) LineType_AA 0
+    drawSegmentArrow imgM white (Segment tile p t)
     circle imgM  (round <$> p') dot green (-1) LineType_AA 0
+    drawSegmentArrow imgM green (Segment tile p' t')
 
   where
-    edgeColor (LeftEdge{}) = green
-    edgeColor (RightEdge{}) = red
+    edgeColor LeftEdge {} = green
+    edgeColor RightEdge {} = red
 
 positionCircleDebug :: FrameMat -> Segment -> FrameMat
 positionCircleDebug frame (Segment tile p t) = exceptError $ do
