@@ -33,6 +33,7 @@ dependencies:
 - mtl
 - data-default
 - text
+- lens
 
 library:
   source-dirs: src

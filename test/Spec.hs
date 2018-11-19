@@ -302,6 +302,7 @@ trackTests = testGroup "Track tests"
   , testCase "shows" trackShow
   , testCase "moves" trackMoves
   , testCase "loops" trackLoops
+  , testCase "transform" trackTransform
   ]
 
 testTrack = fromJust $ Track.parseTrack Track.start "srrsrr"
@@ -365,3 +366,16 @@ trackLoops = let
   Track.Segment tile p t = end
   -- TODO handle rounding error
   in True @?= True -- Track.nextSegment end Track.Straight @?= Track.start
+
+trackTransform :: Assertion
+trackTransform = do
+  transformFromAngle 0 @?= V2 (V2 1 0) (V2 0 1)
+  (round <$>) <$> transformFromAngle (pi / 2) @?= V2 (V2 0 1) (V2 (-1) 0)
+  (round <$>) <$> transformFromAngle pi @?= V2 (V2 (-1) 0) (V2 0 (-1))
+  (round <$>) <$> transformFromAngle (3* (pi/2)) @?= V2 (V2 0 (-1)) (V2 1 0)
+
+  Track.angleFromTransform (V2 (V2 1 0) (V2 0 1)) @?= 0
+  Track.angleFromTransform (V2 (V2 0 1) (V2 (-1) 0)) @?= (pi/2)
+  Track.angleFromTransform (transformFromAngle 0) @?= 0
+  Track.angleFromTransform (transformFromAngle (pi/2)) @?= (pi/2)
+  Track.angleFromTransform (transformFromAngle 2) @?= 2

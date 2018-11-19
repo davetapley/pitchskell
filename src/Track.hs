@@ -27,13 +27,14 @@ data Segment = Segment
 
 angleFromTransform :: Transform -> Double
 angleFromTransform t =
-  let V2 t_x t_y = (t !* V2 (-1) 0)
-  in atan2 t_y t_x
+  let V2 t_x t_y = (t !* V2 1 0)
+      a = -atan2 t_y t_x
+  in if a >= 0 then a else (pi*2) + a
 
 instance Show Segment where
   show (Segment tile p t) =
     let V2 x y = p
-        angle = round $ 180 + angleFromTransform t / pi * 180
+        angle = round $ angleFromTransform t / (2*pi) * 360
       in show tile ++ " " ++ show (round x) ++ "×" ++ show (round y) ++ " " ++ show angle ++ "°"
 
 type Track = Loop.Loop Segment

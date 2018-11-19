@@ -1,18 +1,20 @@
 module TilePositionerDebug where
 
 import Prelude hiding (Left, lines)
+import Control.Lens
 import Control.Monad.Except(MonadError, void)
 import Control.Monad.Primitive
 import Data.Foldable
 import Data.Int
 import Data.Proxy
 import Data.Word
-import Data.Vector as V
+import Data.Vector as V hiding ((++))
 import Linear
 import OpenCV as CV
 import OpenCV.Extra.XFeatures2d
 import OpenCV.Internal.C.Types
 import OpenCV.ImgProc.FeatureDetection
+import qualified Data.Text as T
 
 import TilePositioner
 import Track
@@ -28,8 +30,11 @@ positionLineDebug frame (Segment tile p t) = exceptError $ do
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
     void $ matCopyToM imgM zero frame Nothing
     let dot = round $ trackWidth t / 32.0
-    for_ (candidateLines (Segment tile p t) frame) $
-      \(lineSegment, edge) -> line imgM (lineSegmentStart lineSegment) (lineSegmentStop  lineSegment) (edgeColor edge) 2 LineType_8 0
+        putText' str pos color = putText imgM (T.pack str) pos (Font FontHersheySimplex NotSlanted 0.3) color 1 LineType_AA False
+        showAngle angle = show (round $ angle / (2*pi) * 360)
+    for_ (candidateLines (Segment tile p t) frame) $ \(lineSegment, edge) -> do
+      arrowedLine imgM (lineSegmentStart lineSegment) (lineSegmentStop  lineSegment) (edgeColor edge) 1 LineType_AA 0 0.15
+      putText' (showAngle $ angleFromPoints $ pointsFromLineSegment lineSegment) ((round <$>) <$> (^._x) $ pointsFromLineSegment lineSegment :: V2 Int32) (edgeColor edge)
 
     circle imgM  (round <$> p) dot white (-1) LineType_AA 0
     drawSegmentArrow imgM white (Segment tile p t)
