@@ -19,6 +19,7 @@ import qualified Data.Text as T
 import TilePositioner
 import Track
 import TrackGeometry
+import Transform
 import Colors
 import TrackDebug(drawSegmentArrow)
 

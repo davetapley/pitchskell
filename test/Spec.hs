@@ -25,6 +25,7 @@ import TilePositionerDebug
 import qualified Loop
 import qualified Track
 import TrackGeometry
+import Transform
 import qualified OpenCV as CV
 import TrackDebug
 import OpenCV.Core.Types.Mat
@@ -32,7 +33,6 @@ import OpenCV.VideoIO.Types
 import qualified Data.Vector as V
 
 import qualified Video
-
 
 import System.IO.Unsafe ( unsafePerformIO )
 
@@ -107,31 +107,24 @@ tileMatcherTests = testGroup "Tile matcher tests"
   , testCase "Find track" tileMatcherFindTrack
   ]
 
+idleNoCarsRotatedStart = Track.Segment Track.Straight (V2 383 487) $ mkTransform (V2 (V2 0 (-55)) (V2 (-55) 0))
+idleNoCarsRotatedTrack = fromJust $ Track.parseTrack idleNoCarsRotatedStart "sslrlsllrsslrlls"
+
 tileMatcherStraight :: Assertion
 tileMatcherStraight = do
-  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-      track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
-      straight = track Loop.!! 1
+  let straight = idleNoCarsRotatedTrack Loop.!! 1
   renderImage "/tmp/tileMatcherStraight.png" $ TileMatcherDebug.drawTileMasks idleNoCarsRotated straight
 
 tileMatcherLeft :: Assertion
 tileMatcherLeft = do
-  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-      track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
-      left = track Loop.!! 2
+  let left = idleNoCarsRotatedTrack Loop.!! 2
   renderImage "/tmp/tileMatcherLeft.png" $ TileMatcherDebug.drawTileMasks idleNoCarsRotated left
 
 tileMatcherDrawTrackMask :: Assertion
-tileMatcherDrawTrackMask = do
-  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-      track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
-  renderImage "/tmp/tileMatcherTrack.png" $ TileMatcherDebug.drawTrackMask idleNoCarsRotated track
+tileMatcherDrawTrackMask =  renderImage "/tmp/tileMatcherTrack.png" $ TileMatcherDebug.drawTrackMask idleNoCarsRotated idleNoCarsRotatedTrack
 
 tileMatcherFindTrack :: Assertion
-tileMatcherFindTrack = do
-  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-      track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
-  TileMatcher.findTrack idleNoCarsRotated start @?= track
+tileMatcherFindTrack = TileMatcher.findTrack idleNoCarsRotated idleNoCarsRotatedStart @?= idleNoCarsRotatedTrack
 
 tilePositionerTests :: TestTree
 tilePositionerTests = testGroup "Tile positioner tests"
@@ -151,16 +144,16 @@ tilePositionerInpaintWalls = renderImage "/tmp/tilePositionerInpaintWalls.png" (
 
 tilePositionerCanny :: Assertion
 tilePositionerCanny = do
-   let t = V2 (V2 0 (-55)) (V2 (-55) 0)
-   let edgeImg = showHough t idleNoCarsRotated
-   renderImage "/tmp/tilePositionerCannyHough.png" edgeImg
-   let edgeImgInpaint = showHough t . inpaintWalls $ idleNoCarsRotated
-   renderImage "/tmp/tilePositionerCannyHoughInpaintedWalls.png" edgeImgInpaint
+  let t = Track.transform idleNoCarsRotatedStart
+  let edgeImg = showHough t idleNoCarsRotated
+  renderImage "/tmp/tilePositionerCannyHough.png" edgeImg
+  let edgeImgInpaint = showHough t . inpaintWalls $ idleNoCarsRotated
+  renderImage "/tmp/tilePositionerCannyHoughInpaintedWalls.png" edgeImgInpaint
 
 tilePositionerMinRadius :: Assertion
 tilePositionerMinRadius =
-  let t = V2 (V2 0 (-55)) (V2 (-55) 0)
-        in round (innerCornerCircleRadius t) @?= 18
+  let t = Track.transform idleNoCarsRotatedStart
+    in round (innerCornerCircleRadius t) @?= 18
 
 tilePositionerLines :: Assertion
 tilePositionerLines = do
@@ -169,54 +162,50 @@ tilePositionerLines = do
 
 tilePositionerCircles :: Assertion
 tilePositionerCircles =
-  let t = V2 (V2 0 (-55)) (V2 (-55) 0)
-  in V.length (TP.circles t idleNoCarsRotated) @?= 30
+  let t = Track.transform idleNoCarsRotatedStart
+    in V.length (TP.circles t idleNoCarsRotated) @?= 30
 
 tilePositionerStraight :: Assertion
 tilePositionerStraight = do
-  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-      straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 1
-  distance (positionTile idleNoCarsRotated straight ) (Track.position straight) < trackWidth (Track.transform start) @? "Strayed too far"
+  let straight = idleNoCarsRotatedTrack Loop.!! 1
+  distance (positionTile idleNoCarsRotated straight ) (Track.position straight) < trackWidth (Track.transform idleNoCarsRotatedStart) @? "Strayed too far"
   renderImage "/tmp/tilePositionerStraight.png" $ positionLineDebug idleNoCarsRotated straight
 
-  let straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 5
+  let straight = idleNoCarsRotatedTrack Loop.!! 5
   renderImage "/tmp/tilePositionerStraightTwo.png" $ positionLineDebug idleNoCarsRotated straight
 
-  let straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 9
+  let straight = idleNoCarsRotatedTrack Loop.!! 9
   renderImage "/tmp/tilePositionerStraightThree.png" $ positionLineDebug idleNoCarsRotated straight
 
-  let straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 10
+  let straight = idleNoCarsRotatedTrack Loop.!! 10
   renderImage "/tmp/tilePositionerStraightFour.png" $ positionLineDebug idleNoCarsRotated straight
 
-  let straight = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 15
+  let straight = idleNoCarsRotatedTrack Loop.!! 15
   renderImage "/tmp/tilePositionerStraightFive.png" $ positionLineDebug idleNoCarsRotated straight
 
 tilePositionerLeft :: Assertion
 tilePositionerLeft = do
-  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-      left = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 2
-  distance (positionTile idleNoCarsRotated left ) (Track.position left) < trackWidth (Track.transform start) @? "Strayed too far"
+  let left = idleNoCarsRotatedTrack Loop.!! 2
+  distance (positionTile idleNoCarsRotated left ) (Track.position left) < trackWidth (Track.transform idleNoCarsRotatedStart) @? "Strayed too far"
   renderImage "/tmp/tilePositionerLeft.png" $ positionCircleDebug idleNoCarsRotated left
 
-  let left = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 4
+  let left = idleNoCarsRotatedTrack Loop.!! 4
   renderImage "/tmp/tilePositionerLeftTwo.png" $ positionCircleDebug idleNoCarsRotated left
 
 tilePositionerRight :: Assertion
 tilePositionerRight = do
-  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-      right = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 3
-  distance (positionTile idleNoCarsRotated right) (Track.position right) < trackWidth (Track.transform start) @? "Strayed too far"
+  let right = idleNoCarsRotatedTrack Loop.!! 3
+  distance (positionTile idleNoCarsRotated right) (Track.position right) < trackWidth (Track.transform idleNoCarsRotatedStart) @? "Strayed too far"
   renderImage "/tmp/tilePositionerRight.png" $ positionCircleDebug idleNoCarsRotated right
 
-  let right = fromJust (Track.parseTrack start "sslrlsllrsslrlls") Loop.!! 8
+  let right = idleNoCarsRotatedTrack Loop.!! 8
   renderImage "/tmp/tilePositionerRightTwo.png" $ positionCircleDebug idleNoCarsRotated right
 
 tilePositionerTrack :: Assertion
 tilePositionerTrack = do
-  let start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-      track = fromJust (Track.parseTrack start "sslrlsllrsslrlls")
-  renderImage "/tmp/tilePositionerTrackMask.png" $ TileMatcherDebug.drawTrackMask idleNoCarsRotated (updatePositions idleNoCarsRotated track)
-  renderImage "/tmp/tilePositionerTrackOutline.png" $ drawTrackOutline idleNoCarsRotated (updatePositions idleNoCarsRotated track)
+  let positions = updatePositions idleNoCarsRotated idleNoCarsRotatedTrack
+  renderImage "/tmp/tilePositionerTrackMask.png" $ TileMatcherDebug.drawTrackMask idleNoCarsRotated positions
+  renderImage "/tmp/tilePositionerTrackOutline.png" $ drawTrackOutline idleNoCarsRotated positions
 
 trackDebugTests :: TestTree
 trackDebugTests = testGroup "TrackDebug tests"
@@ -225,16 +214,10 @@ trackDebugTests = testGroup "TrackDebug tests"
   ]
 
 trackDebugArrows :: Assertion
-trackDebugArrows = do
-  let track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
-      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-  renderImage "/tmp/trackArrows.png" $ drawTrackArrows idleNoCarsRotated track
+trackDebugArrows = renderImage "/tmp/trackArrows.png" $ drawTrackArrows idleNoCarsRotated idleNoCarsRotatedTrack
 
 trackDebugOutline :: Assertion
-trackDebugOutline = do
-  let track = fromJust $ Track.parseTrack start "sslrlsllrsslrlls"
-      start = Track.Segment Track.Straight (V2 383 487) (V2 (V2 0 (-55)) (V2 (-55) 0))
-  renderImage "/tmp/trackOutline.png" $ drawTrackOutline idleNoCarsRotated track
+trackDebugOutline = renderImage "/tmp/trackOutline.png" $ drawTrackOutline idleNoCarsRotated idleNoCarsRotatedTrack
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"
@@ -321,7 +304,7 @@ trackNextSegment = let
   in do
     tile @?= Track.Right
     p @?= V2 1.613 0
-    t @?= V2 (trackUnitVector) (V2 0 1)
+    getMat t @?= V2 trackUnitVector (V2 0 1)
 
 trackScanl :: Assertion
 trackScanl = let
@@ -332,15 +315,15 @@ trackScanl = let
   in do
     x_tile @?= Track.Straight
     x_p @?= zero
-    x_t @?= V2 (trackUnitVector) (V2 0 1)
+    getMat x_t @?= V2 trackUnitVector (V2 0 1)
 
     y_tile @?= Track.Right
     y_p @?= V2 1.613 0
-    y_t @?= V2 (trackUnitVector) (V2 0 1)
+    getMat y_t @?= V2 trackUnitVector (V2 0 1)
 
     z_tile @?= Track.Right
     z_p @?= V2 2.433 (-0.82)
-    z_t @?= V2 (V2 0 (-1)) (trackUnitVector)
+    getMat z_t @?= V2 (V2 0 (-1)) trackUnitVector
 
 trackStart :: Assertion
 trackStart = let
@@ -364,18 +347,17 @@ trackLoops :: Assertion
 trackLoops = let
   Loop.Loop _ (Loop.Node end) _ = Loop.prev testTrack
   Track.Segment tile p t = end
-  -- TODO handle rounding error
-  in True @?= True -- Track.nextSegment end Track.Straight @?= Track.start
+  in show (Track.nextSegment end Track.Straight) @?= show Track.start
 
 trackTransform :: Assertion
 trackTransform = do
-  transformFromAngle 0 @?= V2 (V2 1 0) (V2 0 1)
-  (round <$>) <$> transformFromAngle (pi / 2) @?= V2 (V2 0 1) (V2 (-1) 0)
-  (round <$>) <$> transformFromAngle pi @?= V2 (V2 (-1) 0) (V2 0 (-1))
-  (round <$>) <$> transformFromAngle (3* (pi/2)) @?= V2 (V2 0 (-1)) (V2 1 0)
+  transformFromAngle eye 0 @?= mkTransform (V2 (V2 1 0) (V2 0 1))
+  (round <$>) <$> getMat (transformFromAngle eye (pi / 2) ) @?= V2 (V2 0 1) (V2 (-1) 0)
+  (round <$>) <$> getMat (transformFromAngle eye pi ) @?= V2 (V2 (-1) 0) (V2 0 (-1))
+  (round <$>) <$> getMat (transformFromAngle eye (3* (pi/2)) ) @?= V2 (V2 0 (-1)) (V2 1 0)
 
-  Track.angleFromTransform (V2 (V2 1 0) (V2 0 1)) @?= 0
-  Track.angleFromTransform (V2 (V2 0 1) (V2 (-1) 0)) @?= (pi/2)
-  Track.angleFromTransform (transformFromAngle 0) @?= 0
-  Track.angleFromTransform (transformFromAngle (pi/2)) @?= (pi/2)
-  Track.angleFromTransform (transformFromAngle 2) @?= 2
+  Transform.angleFromTransform (mkTransform (V2 (V2 1 0) (V2 0 1))) @?= 0
+  Transform.angleFromTransform (mkTransform (V2 (V2 0 1) (V2 (-1) 0))) @?= (pi/2)
+  Transform.angleFromTransform (transformFromAngle eye 0) @?= 0
+  Transform.angleFromTransform (transformFromAngle eye (pi/2)) @?= (pi/2)
+  Transform.angleFromTransform (transformFromAngle eye 2) @?= 2

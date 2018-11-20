@@ -8,12 +8,14 @@ import Data.Proxy
 import Data.Word
 import Data.Vector hiding (zipWith, map, (++))
 import qualified Data.Vector as V
-import Linear
+import Linear(zero)
+import Linear.V2
 import OpenCV
 import OpenCV.Extra.XFeatures2d
 import OpenCV.Internal.C.Types
 import Track
 import TrackGeometry
+import Transform
 import Loop
 import Colors
 import qualified Data.Text as T
@@ -37,14 +39,17 @@ drawSegmentArrows frame segments imgM = do
   matCopyToM imgM zero frame Nothing
   M.zipWithM_ (drawSegmentArrow imgM) (cycle [red, green, blue]) segments
 
-drawSegmentArrow imgM color (Segment _ p t@(V2 t0 t1)) = do
+drawSegmentArrow imgM color (Segment _ p t) = do
   let a = round <$> p
-  let b = round <$> (p + (V2 t0 t1 !* trackUnitVector))
+  let b = round <$> (p + (t !* trackUnitVector))
   arrowedLine imgM a b color 1 LineType_AA 0 0.15
   putText' (showV2 a) a
 
-  putText' (showV2 $ round <$> t0) b
-  putText' (showV2 $ round <$> t1) (b + V2 0 10)
+  putText' (showV2 b) b
+  let (V2 t0 t1) = getMat t
+  putText' (showV2 $ round <$> t0) (b + V2 0 10)
+  putText' (showV2 $ round <$> t1) (b + V2 0 20)
+  putText' (show (round $ angleFromTransform t / (2*pi) * 360)) (b + V2 0 30)
 
   where putText' str pos = putText imgM (T.pack str) pos (Font FontHersheySimplex NotSlanted 0.3) color 1 LineType_AA False
 

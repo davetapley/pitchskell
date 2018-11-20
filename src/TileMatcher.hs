@@ -7,9 +7,8 @@ import Control.Monad.Primitive
 import Data.Proxy
 import Data.Int
 import qualified Data.Vector as V
-import Linear.Matrix
 import Linear.Vector
-import Linear
+import Linear(norm, distance)
 import Linear.V2
 import Linear.V3
 import Linear.V4
@@ -22,6 +21,7 @@ import Data.Function
 import Debug.Trace
 
 import Track
+import Transform
 import TrackGeometry
 import Loop
 
@@ -74,7 +74,7 @@ renderMask
   -> m ()
 
 renderMask (Segment Straight p t) imgM =
-  let origin = round <$> (p + (t !* V2 0 (-0.5)))
+  let origin = round <$> (p + (t !* V2 0 (0.5)))
       size = round <$> (t !* V2 1.613 1)
       points = V.fromList $ map (\pt -> round <$> p + (t !* pt)) [
         V2 0 (-0.5),

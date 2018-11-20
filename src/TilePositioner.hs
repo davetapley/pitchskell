@@ -18,6 +18,7 @@ import System.IO.Unsafe ( unsafePerformIO )
 
 import Loop
 import Track
+import Transform
 import TrackGeometry
 
 import Debug.Trace
@@ -55,18 +56,13 @@ angleFromPoints (V2 (V2 x0 y0) (V2 x1 y1)) =
 pointsFromLineSegment :: LineSegment Int32 -> V2 (V2 Double)
 pointsFromLineSegment (LineSegment p0 p1) = V2 ((realToFrac <$>) p0) ((realToFrac <$>) p1)
 
--- clockwise rotation matrix, aka left handed, aka y axes goes down
-transformFromAngle :: Double -> Transform
-transformFromAngle angle = V2 (V2 (cos angle) (sin angle)) (V2 (-(sin angle)) (cos angle))
-
 transformTile :: FrameMat -> Segment -> Transform
 transformTile frame s@(Segment Straight p t) =
   let lines = candidateLines s frame
       angle = angleFromTransform t
       lineAngle = angleFromPoints $ pointsFromLineSegment $ fst $ V.head lines
-      -- angle' = if abs(angle - lineAngle) < pi/2 then lineAngle else (lineAngle + pi) `mod'` 2*pi
-      t' = (^* trackWidth t) <$> transformFromAngle lineAngle
-    in if V.null lines then t else t'
+      angle' = if abs(angle - lineAngle) < pi then lineAngle else (lineAngle + pi) `mod'` pi
+    in if V.null lines then t else transformFromAngle t angle'
 
 transformTile frame (Segment tile p t) = t
 
