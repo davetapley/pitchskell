@@ -53,9 +53,11 @@ transformTile :: FrameMat -> Segment -> Transform
 transformTile frame s@(Segment Straight p t) =
   let lines = candidateLines s frame
       angle = angleFromTransform t
-      lineAngle = angleFromPoints $ pointsFromLineSegment $ fst $ V.head lines
-      -- angle' = if abs(angle - lineAngle) < pi then lineAngle else (lineAngle + pi) `mod'` pi
-    in if V.null lines then t else transformFromAngle t lineAngle
+      -- TODO: Is taking the mean of an angle bad (because modulus)?
+      lineAngle = mean $ fmap (angleFromPoints . pointsFromLineSegment . fst ) lines
+      -- lineAngle might be pointing in the opposite direction to the segment
+      angle' = if abs(angle - lineAngle) < (pi/2) then lineAngle else (lineAngle + pi) `mod'` pi
+    in if V.null lines then t else transformFromAngle t angle'
 
 transformTile frame (Segment tile p t) = t
 
@@ -68,7 +70,7 @@ isCandidateLine :: Segment -> LineSegment Int32 -> Maybe StraightEdge
 isCandidateLine (Segment Straight p t) line =
   let edges  = straightEdges (Segment Straight p t)
       maxDist = trackWidth t / 4.0
-  in V.find (\edge -> (lineDistance line (straightEdgeStart edge) < maxDist) && (lineDistance line (straightEdgeStop edge) < maxDist)) edges
+  in V.find (\edge -> (lineDistance line (straightEdgeStart edge) < maxDist) || (lineDistance line (straightEdgeStop edge) < maxDist)) edges
 
 isCandidateLine Segment {}  _ = error "Expect Straight"
 
