@@ -1,4 +1,4 @@
-module TilePositioner where
+module SegmentPositioner where
 
 import Prelude hiding (Left, Right, filter, lines)
 import Control.Monad.Except(MonadError, void, lift)
@@ -25,11 +25,11 @@ import Debug.Trace
 
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
-updatePositions :: FrameMat -> Track -> Track
-updatePositions frame = fmap (updatePosition frame)
+positionSegments :: FrameMat -> Track -> Track
+positionSegments frame = fmap (positionSegment frame)
 
-updatePosition :: FrameMat -> Segment -> Segment
-updatePosition frame segment = segment { position = positionTile frame segment, transform = transformTile frame segment }
+positionSegment :: FrameMat -> Segment -> Segment
+positionSegment frame segment = segment { position = positionTile frame segment, transform = transformTile frame segment }
 
 positionTile :: FrameMat -> Segment -> Position
 positionTile frame (Segment Straight p t) = p

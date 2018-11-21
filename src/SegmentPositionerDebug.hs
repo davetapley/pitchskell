@@ -1,4 +1,4 @@
-module TilePositionerDebug where
+module SegmentPositionerDebug where
 
 import Prelude hiding (Left, lines)
 import Control.Lens
@@ -16,7 +16,7 @@ import OpenCV.Internal.C.Types
 import OpenCV.ImgProc.FeatureDetection
 import qualified Data.Text as T
 
-import TilePositioner
+import SegmentPositioner
 import Track
 import TrackGeometry
 import Transform
