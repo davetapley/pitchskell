@@ -41,7 +41,7 @@ drawSegmentArrows frame segments imgM = do
 
 drawSegmentArrow imgM color (Segment _ p t) = do
   let a = round <$> p
-  let b = round <$> (p + (t !* trackUnitVector))
+  let b = round <$> (p + (trackUnitVector `transOn` t))
   arrowedLine imgM a b color 1 LineType_AA 0 0.15
   putText' (showV2 a) a
 
@@ -80,9 +80,9 @@ drawOutline
     -> m ()
 
 drawOutline imgM (Segment Straight p t) =
-  let origin = round <$> (p + (t !* V2 0 (-0.5)))
-      size = round <$> (t !* V2 1.613 1)
-      points = V.fromList $ map (\pt -> round <$> p + (t !* pt)) [
+  let origin = round <$> (p + (V2 0 (-0.5) `transOn` t))
+      size = round <$> (V2 1.613 1 `transOn` t)
+      points = V.fromList $ map (\pt -> round <$> p + (pt `transOn` t)) [
         V2 0 (-0.5),
         V2 0   0.5,
         V2 1.613   0.5,
@@ -95,11 +95,11 @@ drawOutline imgM (Segment Straight p t) =
 
 drawOutline imgM (Segment Left p t) =
   let origin = round <$> moveToCircleOrigin (Segment Left p t)
-      outerAxis = round . abs <$> (t !* V2 1.32 1.32)
-      innerAxis = round . abs <$> (t !* V2 0.32 0.32)
-      V2 x y = t !* trackUnitVector
+      outerAxis = round . abs <$> (V2 1.32 1.32 `transOn` t)
+      innerAxis = round . abs <$> (V2 0.32 0.32 `transOn` t)
+      V2 x y = trackUnitVector `transOn` t
       angle = atan2 y x / pi * 180
-      points = V.fromList $ map (\pt -> round <$> p + (t !* pt)) [
+      points = V.fromList $ map (\pt -> round <$> p + (pt `transOn` t)) [
         V2 0 (-0.5),
         V2 0   0.5,
         V2 (1.33)   (-0.83),
@@ -112,11 +112,11 @@ drawOutline imgM (Segment Left p t) =
 
 drawOutline imgM (Segment Right p t) =
   let origin = round <$> moveToCircleOrigin (Segment Right p t)
-      outerAxis = round . abs <$> (t !* V2 1.32 1.32)
-      innerAxis = round . abs <$> (t !* V2 0.32 0.32)
-      V2 x y = t !* trackUnitVector
+      outerAxis = round . abs <$> (V2 1.32 1.32 `transOn` t)
+      innerAxis = round . abs <$> (V2 0.32 0.32 `transOn` t)
+      V2 x y = trackUnitVector `transOn` t
       angle = 180 + atan2 y x / pi * 180
-      points = V.fromList $ map (\pt -> round <$> p + (t !* pt)) [
+      points = V.fromList $ map (\pt -> round <$> p + (pt `transOn` t)) [
         V2 0 (-0.5),
         V2 0   0.5,
         V2 (1.33)   0.83,

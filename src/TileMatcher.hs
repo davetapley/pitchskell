@@ -74,9 +74,9 @@ renderMask
   -> m ()
 
 renderMask (Segment Straight p t) imgM =
-  let origin = round <$> (p + (t !* V2 0 (0.5)))
-      size = round <$> (t !* V2 1.613 1)
-      points = V.fromList $ map (\pt -> round <$> p + (t !* pt)) [
+  let origin = round <$> (p + (V2 0 (0.5) `transOn` t))
+      size = round <$> (V2 1.613 1 `transOn` t)
+      points = V.fromList $ map (\pt -> round <$> p + (pt `transOn` t)) [
         V2 0 (-0.5),
         V2 0   0.5,
         V2 1.613   0.5,
@@ -87,7 +87,7 @@ renderMask (Segment Left p t) imgM =
   let origin = round <$> moveToCircleOrigin (Segment Left p t)
       axis = pure $ round $ outerCornerCircleRadius t :: V2 Int32
       innerRadius = round $ innerCornerCircleRadius t
-      V2 x y = t !* trackUnitVector
+      V2 x y = trackUnitVector `transOn` t
       angle = atan2 y x / pi * 180
   in do
     ellipse imgM origin axis angle 0 90 white (-1) LineType_8 0
@@ -97,7 +97,7 @@ renderMask (Segment Right p t) imgM =
   let origin = round <$> moveToCircleOrigin (Segment Right p t)
       axis = pure $ round $ outerCornerCircleRadius t :: V2 Int32
       innerRadius = round $ innerCornerCircleRadius t
-      V2 x y = t !* trackUnitVector
+      V2 x y = trackUnitVector `transOn` t
       angle = 180 + atan2 y x / pi * 180
   in do
     ellipse imgM origin axis angle 90 180 white (-1) LineType_8 0

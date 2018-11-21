@@ -7,7 +7,7 @@ module Transform
   , innerCornerCircleRadius
   , outerCornerCircleRadius
   , angleFromTransform
-  , (!*)
+  , transOn
   , turnLeft
   , turnRight
   , transformFromAngle
@@ -44,8 +44,8 @@ angleFromTransform (Transform mat) =
 eye :: Transform
 eye = Transform $ V2 (V2 1 0) (V2 0 1)
 
--- TODO: This is an awful artifact of me messing up rotation matrices
-(Transform mat) !* p = p Linear.*! mat
+transOn :: V2 Double -> Transform -> V2 Double
+transOn p (Transform mat) = p Linear.*! mat
 
 turnLeft (Transform mat) = Transform $ V2 (V2 0 1) (V2 (-1) 0) Linear.!*! mat
 turnRight (Transform mat) = Transform $ V2 (V2 0 (-1)) (V2 1 0) Linear.!*! mat

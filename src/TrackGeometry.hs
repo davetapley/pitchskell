@@ -6,7 +6,7 @@ import Linear.V2
 import Data.Vector
 
 relativePosition :: Double -> Double -> Position -> Transform -> Position
-relativePosition y x p t = p + (t !* V2 y x)
+relativePosition x y p t = p + (V2 x y `transOn` t)
 
 -- Length equal to track width, travelling left to right
 trackUnitVector :: Position
