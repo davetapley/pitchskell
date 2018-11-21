@@ -87,8 +87,8 @@ renderMask (Segment Left p t) imgM =
   let origin = round <$> moveToCircleOrigin (Segment Left p t)
       axis = pure $ round $ outerCornerCircleRadius t :: V2 Int32
       innerRadius = round $ innerCornerCircleRadius t
-      V2 x y = (t !* V2 (-1) 0)
-      angle = 180 + atan2 y x / pi * 180
+      V2 x y = t !* trackUnitVector
+      angle = atan2 y x / pi * 180
   in do
     ellipse imgM origin axis angle 0 90 white (-1) LineType_8 0
     circle imgM origin innerRadius black (-1) LineType_8 0

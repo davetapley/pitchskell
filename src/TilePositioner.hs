@@ -38,13 +38,6 @@ positionTile frame segment =
   let meanCircleOrigin = mean (candidateCircles segment frame)
   in  moveFromCircleOrigin segment meanCircleOrigin
 
-  where
-    -- This should be inverse of TrackGeometry.moveToCircleOrigin,
-    -- but the origin coming back from houghCircles seems to be more 'inwards'.
-    moveFromCircleOrigin :: Segment -> Position -> Position
-    moveFromCircleOrigin (Segment Right _ t) p = relativePosition 0 0.82 p t
-    moveFromCircleOrigin (Segment Left _ t) p = relativePosition 0 (-0.82) p t
-
 mean :: Fractional a => V.Vector a -> a
 mean xs = V.sum xs / realToFrac (V.length xs)
 
@@ -61,8 +54,8 @@ transformTile frame s@(Segment Straight p t) =
   let lines = candidateLines s frame
       angle = angleFromTransform t
       lineAngle = angleFromPoints $ pointsFromLineSegment $ fst $ V.head lines
-      angle' = if abs(angle - lineAngle) < pi then lineAngle else (lineAngle + pi) `mod'` pi
-    in if V.null lines then t else transformFromAngle t angle'
+      -- angle' = if abs(angle - lineAngle) < pi then lineAngle else (lineAngle + pi) `mod'` pi
+    in if V.null lines then t else transformFromAngle t lineAngle
 
 transformTile frame (Segment tile p t) = t
 

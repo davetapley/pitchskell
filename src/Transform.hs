@@ -19,7 +19,10 @@ import Linear.V2
 newtype Transform = Transform (V2 (V2 Double)) deriving (Eq, Show)
 
 mkTransform :: V2 (V2 Double) -> Transform
-mkTransform = Transform
+mkTransform mat =
+  if Linear.det22 mat < 0
+    then error "Rotation matrix must have positive determinant"
+    else Transform mat
 
 getMat (Transform mat) = mat
 
@@ -41,7 +44,8 @@ angleFromTransform (Transform mat) =
 eye :: Transform
 eye = Transform $ V2 (V2 1 0) (V2 0 1)
 
-(Transform mat) !* p = mat Linear.!* p
+-- TODO: This is an awful artifact of me messing up rotation matrices
+(Transform mat) !* p = p Linear.*! mat
 
 turnLeft (Transform mat) = Transform $ V2 (V2 0 1) (V2 (-1) 0) Linear.!*! mat
 turnRight (Transform mat) = Transform $ V2 (V2 0 (-1)) (V2 1 0) Linear.!*! mat

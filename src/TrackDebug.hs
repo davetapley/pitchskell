@@ -97,13 +97,13 @@ drawOutline imgM (Segment Left p t) =
   let origin = round <$> moveToCircleOrigin (Segment Left p t)
       outerAxis = round . abs <$> (t !* V2 1.32 1.32)
       innerAxis = round . abs <$> (t !* V2 0.32 0.32)
-      V2 x y = (t !* V2 (-1) 0)
-      angle = 180 + atan2 y x / pi * 180
+      V2 x y = t !* trackUnitVector
+      angle = atan2 y x / pi * 180
       points = V.fromList $ map (\pt -> round <$> p + (t !* pt)) [
         V2 0 (-0.5),
         V2 0   0.5,
-        V2 (1.33)   0.83,
-        V2 0.33 0.83]
+        V2 (1.33)   (-0.83),
+        V2 0.33 (-0.83)]
   in do
     ellipse imgM origin outerAxis angle 0 90 green 1 LineType_8 0
     ellipse imgM origin innerAxis angle 0 90 green 1 LineType_8 0
@@ -119,8 +119,8 @@ drawOutline imgM (Segment Right p t) =
       points = V.fromList $ map (\pt -> round <$> p + (t !* pt)) [
         V2 0 (-0.5),
         V2 0   0.5,
-        V2 (1.33)   (-0.83),
-        V2 0.33 (-0.83)]
+        V2 (1.33)   0.83,
+        V2 0.33 0.83]
   in do
     ellipse imgM origin outerAxis angle 90 180 green 1 LineType_8 0
     ellipse imgM origin innerAxis angle 90 180 green 1 LineType_8 0

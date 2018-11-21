@@ -107,7 +107,7 @@ tileMatcherTests = testGroup "Tile matcher tests"
   , testCase "Find track" tileMatcherFindTrack
   ]
 
-idleNoCarsRotatedStart = Track.Segment Track.Straight (V2 383 487) $ mkTransform (V2 (V2 0 (-55)) (V2 (-55) 0))
+idleNoCarsRotatedStart = Track.Segment Track.Straight (V2 383 487) $ mkTransform (V2 (V2 0 (-55)) (V2 (55) 0))
 idleNoCarsRotatedTrack = fromJust $ Track.parseTrack idleNoCarsRotatedStart "sslrlsllrsslrlls"
 
 tileMatcherStraight :: Assertion
@@ -186,8 +186,9 @@ tilePositionerStraight = do
 tilePositionerLeft :: Assertion
 tilePositionerLeft = do
   let left = idleNoCarsRotatedTrack Loop.!! 2
-  distance (positionTile idleNoCarsRotated left ) (Track.position left) < trackWidth (Track.transform idleNoCarsRotatedStart) @? "Strayed too far"
+  let dist = distance (positionTile idleNoCarsRotated left ) (Track.position left)
   renderImage "/tmp/tilePositionerLeft.png" $ positionCircleDebug idleNoCarsRotated left
+  dist < trackWidth (Track.transform idleNoCarsRotatedStart) @? "Strayed too far"
 
   let left = idleNoCarsRotatedTrack Loop.!! 4
   renderImage "/tmp/tilePositionerLeftTwo.png" $ positionCircleDebug idleNoCarsRotated left
@@ -195,8 +196,8 @@ tilePositionerLeft = do
 tilePositionerRight :: Assertion
 tilePositionerRight = do
   let right = idleNoCarsRotatedTrack Loop.!! 3
-  distance (positionTile idleNoCarsRotated right) (Track.position right) < trackWidth (Track.transform idleNoCarsRotatedStart) @? "Strayed too far"
   renderImage "/tmp/tilePositionerRight.png" $ positionCircleDebug idleNoCarsRotated right
+  distance (positionTile idleNoCarsRotated right) (Track.position right) < trackWidth (Track.transform idleNoCarsRotatedStart) @? "Strayed too far"
 
   let right = idleNoCarsRotatedTrack Loop.!! 8
   renderImage "/tmp/tilePositionerRightTwo.png" $ positionCircleDebug idleNoCarsRotated right
@@ -322,8 +323,8 @@ trackScanl = let
     getMat y_t @?= V2 trackUnitVector (V2 0 1)
 
     z_tile @?= Track.Right
-    z_p @?= V2 2.433 (-0.82)
-    getMat z_t @?= V2 (V2 0 (-1)) trackUnitVector
+    z_p @?= V2 2.433 0.82
+    getMat z_t @?= V2 (V2 0 1) (V2 (-1) 0)
 
 trackStart :: Assertion
 trackStart = let

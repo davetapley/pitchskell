@@ -17,11 +17,14 @@ data StraightEdge = LeftEdge { straightEdgeStart :: Position, straightEdgeStop :
 
 straightEdges :: Segment -> Vector StraightEdge
 straightEdges (Segment Straight p t)  =
-  let left = LeftEdge (relativePosition 0 0.5 p t) (relativePosition 1.613 0.5 p t)
-      right = RightEdge (relativePosition 0 (-0.5) p t) (relativePosition 1.613 (-0.5) p t)
+  let left = LeftEdge (relativePosition 0 (-0.5) p t) (relativePosition 1.613 (-0.5) p t)
+      right = RightEdge (relativePosition 0 0.5 p t) (relativePosition 1.613 0.5 p t)
   in fromList [left, right]
 
 moveToCircleOrigin :: Segment -> Position
-moveToCircleOrigin (Segment Right p t)  = relativePosition 0 (-0.82) p t
-moveToCircleOrigin (Segment Left p t)  = relativePosition 0 0.82 p t
+moveToCircleOrigin (Segment Left p t)  = relativePosition 0 (-0.82) p t
+moveToCircleOrigin (Segment Right p t)  = relativePosition 0 0.82 p t
 
+moveFromCircleOrigin :: Segment -> Position -> Position
+moveFromCircleOrigin (Segment Left _ t) p = relativePosition 0 0.82 p t
+moveFromCircleOrigin (Segment Right _ t) p = relativePosition 0 (-0.82) p t
