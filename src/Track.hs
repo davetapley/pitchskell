@@ -3,6 +3,7 @@ module Track where
 import Prelude hiding (Left, Right)
 import Data.Ratio
 import qualified Data.List.Extended as L
+import Text.Printf
 import qualified Loop
 
 import Transform
@@ -30,7 +31,7 @@ instance Show Segment where
   show (Segment tile p t) =
     let V2 x y = p
         angle = round $ angleFromTransform t / (2*pi) * 360
-      in show tile ++ " " ++ show (round x) ++ "×" ++ show (round y) ++ " " ++ show angle ++ "°"
+      in show tile ++ " " ++ printf "%0.2f" x ++ "×" ++ printf "%0.2f" y ++ " " ++ show angle ++ "°"
 
 type Track = Loop.Loop Segment
 

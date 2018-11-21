@@ -5,7 +5,9 @@ import Control.Monad.Except(MonadError, void, lift)
 import Control.Monad.Primitive
 import Data.Fixed
 import Data.Foldable
+import Data.Function(on)
 import Data.Int
+import Data.List(groupBy)
 import Data.Proxy
 import Data.Word
 import Data.Vector as V
@@ -26,7 +28,7 @@ import Debug.Trace
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
 positionSegments :: FrameMat -> Track -> Track
-positionSegments frame = fmap (positionSegment frame)
+positionSegments frame track = positionStraights (fmap (positionSegment frame) track)
 
 positionSegment :: FrameMat -> Segment -> Segment
 positionSegment frame segment = segment { position = positionTile frame segment, transform = transformTile frame segment }
@@ -121,6 +123,26 @@ circles t frame =
       imgG = exceptError $ cvtColor bgr gray frame
       circles = houghCircles 2 1 Nothing (Just 20) (Just minRadius) (Just maxRadius) imgG
   in exceptError $ V.map toCircleCenter <$> circles
+
+positionStraights :: Track -> Track
+positionStraights = mkLoop . Data.Foldable.concat . positionStraights' . chunkStraights
+
+positionStraights' :: [[Segment]] -> [[Segment]]
+positionStraights' (xs:ys:zs:rest)
+  | tile (Prelude.head ys) == Straight =
+        let prev = exitPosition (Prelude.last xs)
+            next = position (Prelude.head zs)
+            dPrev = prev - position (Prelude.head ys)
+            dNext = next - exitPosition (Prelude.last ys)
+            dMean = mean (V.fromList [dPrev, dNext])
+            ys' = Prelude.map (\y -> y { position = position y + dPrev }) ys
+        in xs : positionStraights' (ys':zs:rest)
+  | otherwise = xs : positionStraights' (ys:zs:rest)
+positionStraights' xs = xs
+
+chunkStraights :: Track -> [[Segment]]
+chunkStraights = groupBy chunk . unfold
+  where chunk s1 s2 = (Straight /= Track.tile s1) == (Straight /= Track.tile s2)
 
 inpaintWallsMask :: FrameMat -> EdgeMat
 inpaintWallsMask frame = exceptError $ do
