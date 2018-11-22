@@ -10,11 +10,13 @@ import OpenCV.Core.Types.Mat
 import OpenCV.VideoIO.Types
 
 import qualified FrameGrabber
+import qualified FrameWriter
 
 tests :: TestTree
 tests = testGroup "Video tests"
   [ testCase "Can load" canLoadVideo
   , testCase "Framegrabber" testFrameSizeConsistent
+  , testCase "Framewriter id" testFrameWriterId
   ]
 
 video :: FilePath
@@ -43,3 +45,7 @@ testFrameSizeConsistent = do
   infos <- FrameGrabber.withFrames video matInfo
   length infos @?= 3
 
+testFrameWriterId :: Assertion
+testFrameWriterId = do
+    frames <- FrameGrabber.getFrames video
+    FrameWriter.writeFrames "/tmp/frameWriterId.mov" frames
