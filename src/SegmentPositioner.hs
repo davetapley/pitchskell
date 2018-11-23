@@ -43,11 +43,6 @@ positionTile frame segment =
 mean :: Fractional a => V.Vector a -> a
 mean xs = V.sum xs / realToFrac (V.length xs)
 
-angleFromPoints :: V2 (V2 Double) -> Double
-angleFromPoints (V2 (V2 x0 y0) (V2 x1 y1)) =
-  let a = atan2 (y1 - y0) (x1 - x0)
-  in if a >= 0 then a else (pi*2) + a
-
 pointsFromLineSegment :: LineSegment Int32 -> V2 (V2 Double)
 pointsFromLineSegment (LineSegment p0 p1) = V2 ((realToFrac <$>) p0) ((realToFrac <$>) p1)
 

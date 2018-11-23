@@ -1,6 +1,7 @@
 import Test.Tasty
 import Test.Tasty.HUnit
 
+import Control.Lens
 import Control.Monad
 
 import qualified Data.ByteString as B
@@ -19,6 +20,7 @@ import StartFiducial as SF
 import StartFiducialDebug
 import TileJoin as TJ
 import TileMatcher
+import TrackTracker as TT
 import qualified TileMatcherDebug
 import SegmentPositioner
 import SegmentPositionerDebug
@@ -47,6 +49,7 @@ unitTests = testGroup "Unit tests"
   , trackDebugTests
   , loopTests
   , trackTests
+  , trackTrackingTests
   ]
 
 startFiducialTests :: TestTree
@@ -70,11 +73,9 @@ renderImage fp img = do
 
 testStartFiducialPosition :: Assertion
 testStartFiducialPosition = do
-  points <- fromJust <$> SF.findCenter idleNoCarsRotated
+  points@(V2 center tip) <- fromJust <$> SF.findCenter idleNoCarsRotated
   renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCarsRotated points
 
-  let center = points V.! 0
-  let tip = points V.! 1
   (round <$> center) @?= V2 383 487
   (round <$> tip) @?= V2 383 430
 
@@ -87,14 +88,14 @@ video = "test/video/idle-no-cars-0-3-frames.mp4"
 testStartFiducialConsistency :: Assertion
 testStartFiducialConsistency = do
   (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames video
-  (points :: [Maybe (V.Vector (V2 Double))]) <- mapM SF.findCenter frames
+  (points :: [Maybe (V2 (V2 Double))]) <- mapM SF.findCenter frames
 
   let (debugs :: [SF.FrameMat]) = zipWith drawArrow frames (map fromJust points)
 
   let renderFrame n = renderImage ("/tmp/testStartFiducial_" ++ show n ++ ".png")
   zipWithM_ renderFrame [0..] debugs
 
-  let centers = fmap (V.! 0) (catMaybes points)
+  let centers = fmap (^._x) (catMaybes points)
   let mean = sumV centers ^/ 3
   let deltas = fmap (mean ^-^) centers
   (< V2 1.0 1.0) <$> deltas @?= replicate 3 True
@@ -360,3 +361,13 @@ trackTransform = do
   Transform.angleFromTransform (transformFromAngle eye 0) @?= 0
   Transform.angleFromTransform (transformFromAngle eye (pi/2)) @?= (pi/2)
   Transform.angleFromTransform (transformFromAngle eye 2) @?= 2
+
+trackTrackingTests :: TestTree
+trackTrackingTests = testGroup "Track tracking"
+  [ testCase "track" trackTrackingTrack
+  ]
+
+trackTrackingTrack :: Assertion
+trackTrackingTrack = do
+  track <- fromJust <$> TT.track idleNoCarsRotated
+  renderImage "/tmp/trackTrackerOutline.png" $ drawTrackOutline idleNoCarsRotated track

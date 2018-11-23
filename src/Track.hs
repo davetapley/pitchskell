@@ -26,7 +26,6 @@ data Segment = Segment
   , transform ::  Transform
   } deriving (Eq)
 
-
 instance Show Segment where
   show (Segment tile p t) =
     let V2 x y = p

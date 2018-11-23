@@ -19,7 +19,7 @@ import qualified Data.ByteString as B
 
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
-findCenter :: FrameMat -> IO (Maybe (Vector (V2 Double)))
+findCenter :: FrameMat -> IO (Maybe (V2 (V2 Double)))
 findCenter frame = do
   let sift = mkSift defaultSiftParams
   let (keypointsObject, descriptorsObject) = exceptError $ siftDetectAndCompute sift startTile Nothing
@@ -34,13 +34,13 @@ findCenter frame = do
         Nothing -> pure Nothing
         Just (fm, _) -> pure $ Just $ getVector . fmap (fmap realToFrac . fromPoint) $ perspectiveTransform tilePoints fm
 
-getVector :: Vector (V2 Double) -> Vector (V2 Double)
+getVector :: Vector (V2 Double) -> V2 (V2 Double)
 getVector vs =
   let a = vs ! 0
       b = vs ! 1
       origin = a + ((b - a) / 2)
       ortho = origin + perp (b - a)
-    in V.fromList [origin, ortho]
+    in V2 origin ortho
 
 getMatchingPoints :: V.Vector KeyPoint -> V.Vector KeyPoint -> DMatch -> (V2 CDouble, V2 CDouble)
 getMatchingPoints keypointsObject keypointsScene dmatch =

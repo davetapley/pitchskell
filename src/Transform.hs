@@ -1,6 +1,7 @@
 module Transform
   ( Transform
   , mkTransform
+  , transformFromVector
   , getMat
   , eye
   , trackWidth
@@ -23,6 +24,14 @@ mkTransform mat =
   if Linear.det22 mat < 0
     then error "Rotation matrix must have positive determinant"
     else Transform mat
+
+-- clockwise rotation matrix, aka left handed, aka y axes goes down
+transformFromVector :: V2 (V2 Double) -> Transform
+transformFromVector p@(V2 a b) =
+  let trackWidth = a `Linear.distance` b
+      angle = angleFromPoints p
+      t = V2 (V2 (cos angle) (sin angle)) (V2 (-(sin angle)) (cos angle))
+  in Transform $ (Linear.^* trackWidth) <$> t
 
 getMat (Transform mat) = mat
 
@@ -55,3 +64,8 @@ transformFromAngle :: Transform -> Double -> Transform
 transformFromAngle t angle =
       let t' = V2 (V2 (cos angle) (sin angle)) (V2 (-(sin angle)) (cos angle))
       in Transform $ (Linear.^* trackWidth t) <$> t'
+
+angleFromPoints :: V2 (V2 Double) -> Double
+angleFromPoints (V2 (V2 x0 y0) (V2 x1 y1)) =
+  let a = atan2 (y1 - y0) (x1 - x0)
+  in if a >= 0 then a else (pi*2) + a
