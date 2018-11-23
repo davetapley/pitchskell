@@ -35,6 +35,7 @@ import OpenCV.VideoIO.Types
 import qualified Data.Vector as V
 
 import qualified Video
+import FrameWriter
 
 import System.IO.Unsafe ( unsafePerformIO )
 
@@ -365,9 +366,30 @@ trackTransform = do
 trackTrackingTests :: TestTree
 trackTrackingTests = testGroup "Track tracking"
   [ testCase "track" trackTrackingTrack
+  , testCase "rotated" trackTrackingRotated
+  , testCase "pertubations" trackTrackingPertubations
   ]
 
 trackTrackingTrack :: Assertion
 trackTrackingTrack = do
   track <- fromJust <$> TT.track idleNoCarsRotated
   renderImage "/tmp/trackTrackerOutline.png" $ drawTrackOutline idleNoCarsRotated track
+
+trackTrackingRotated :: Assertion
+trackTrackingRotated = do
+  (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames "test/video/idle-no-cars-0.mov"
+  outlines <- mapM maybeOutline frames
+  FrameWriter.writeFrames "/tmp/trackTrackingRotated.mov" outlines
+
+trackTrackingPertubations :: Assertion
+trackTrackingPertubations = do
+  (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames "test/video/track/pertubations.mov"
+  outlines <- mapM maybeOutline frames
+  FrameWriter.writeFrames "/tmp/trackTrackingPertubations.mov" outlines
+
+maybeOutline :: FrameGrabber.TestMat -> IO FrameGrabber.TestMat
+maybeOutline frame = do
+  maybeTrack <- TT.track frame
+  case maybeTrack of
+    Nothing -> return frame
+    Just track -> return $ drawTrackOutline frame track
