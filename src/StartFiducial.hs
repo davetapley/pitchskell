@@ -1,5 +1,9 @@
 module StartFiducial where
 import Control.Monad
+import Control.Monad.Extra
+import Control.Monad.Trans
+import Control.Monad.Trans.Maybe
+
 import Data.Default
 import Data.Foldable
 import Data.Int
@@ -20,19 +24,26 @@ import qualified Data.ByteString as B
 type FrameMat = Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 
 findCenter :: FrameMat -> IO (Maybe (V2 (V2 Double)))
-findCenter frame = do
+findCenter frame = runMaybeT $ do
   let sift = mkSift defaultSiftParams
-  let (keypointsObject, descriptorsObject) = exceptError $ siftDetectAndCompute sift startTile Nothing
-  let (keypointsScene, descriptorsScene) = exceptError $ siftDetectAndCompute sift frame Nothing
+  (keypointsObject, descriptorsObject) <- liftMaybe $ safeSiftDetectAndCompute sift startTile
+  (keypointsScene, descriptorsScene) <- liftMaybe $ safeSiftDetectAndCompute sift frame
 
-  fbmatcher <- newFlannBasedMatcher (def { indexParams = FlannKDTreeIndexParams 1 })
-  matches <- match fbmatcher descriptorsObject descriptorsScene Nothing
+  fbmatcher <- liftIO $ newFlannBasedMatcher (def { indexParams = FlannKDTreeIndexParams 1 })
+  matches <- liftIO $ match fbmatcher descriptorsObject descriptorsScene Nothing
 
   let (framePts, startPts) =  V.unzip $ V.map (getMatchingPoints keypointsObject keypointsScene) matches
-  let homography = exceptError $ findHomography framePts startPts (def { fhpMethod = FindHomographyMethod_RANSAC })
+  let homography = exceptError $ findHomography framePts startPts (def { fhpMethod = FindHomographyMethod_RANSAC})
     in case homography of
-        Nothing -> pure Nothing
-        Just (fm, _) -> pure $ Just $ getVector . fmap (fmap realToFrac . fromPoint) $ perspectiveTransform tilePoints fm
+        Nothing -> mzero
+        Just (fm, _) -> return $ getVector . fmap (fmap realToFrac . fromPoint) $ perspectiveTransform tilePoints fm
+
+safeSiftDetectAndCompute :: Sift -> FrameMat -> Maybe (V.Vector KeyPoint, Mat 'D 'D 'D)
+safeSiftDetectAndCompute sift mat =
+  let result = exceptError $ siftDetectAndCompute sift mat Nothing
+  in if V.length (fst result) == 0
+       then Nothing
+       else Just result
 
 getVector :: Vector (V2 Double) -> V2 (V2 Double)
 getVector vs =

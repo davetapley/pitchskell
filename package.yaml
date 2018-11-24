@@ -34,6 +34,9 @@ dependencies:
 - data-default
 - text
 - lens
+- mtl
+- transformers
+- monad-extras
 
 library:
   source-dirs: src
