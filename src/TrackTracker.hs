@@ -19,9 +19,9 @@ track frame = do
   mStartVector <- findCenter frame
   case mStartVector of
     Nothing -> return Nothing
-    Just startVector -> return $ Just $ mkTrack (mkStart startVector) [Straight]
-      -- let track = findTrack frame (mkStart startVector)
-      -- in return $ Just $ positionSegments frame track
+    Just startVector -> -- return $ Just $ mkTrack (mkStart startVector) [Straight]
+      let track = findTrack frame (mkStart startVector)
+      in return $ Just $ positionSegments frame track
 
 mkStart :: V2 (V2 Double) -> Segment
 mkStart p@(V2 a b) = Segment Straight a (transformFromVector p)

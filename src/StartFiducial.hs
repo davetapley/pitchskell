@@ -33,7 +33,7 @@ findCenter frame = runMaybeT $ do
   matches <- liftIO $ match fbmatcher descriptorsObject descriptorsScene Nothing
 
   let (framePts, startPts) =  V.unzip $ V.map (getMatchingPoints keypointsObject keypointsScene) matches
-  homography <- liftMaybe $ exceptError $ findHomography framePts startPts (def { fhpMethod = FindHomographyMethod_RANSAC })
+  homography <- liftMaybe $ exceptError $ findHomography framePts startPts (def { fhpMethod = FindHomographyMethod_RANSAC, fhpRansacReprojThreshold = 1 })
   return $ getVector . fmap (fmap realToFrac . fromPoint) $ perspectiveTransform tilePoints (fst homography)
 
 safeSiftDetectAndCompute :: Sift -> FrameMat -> Maybe (V.Vector KeyPoint, Mat 'D 'D 'D)

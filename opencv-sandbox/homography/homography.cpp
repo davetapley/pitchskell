@@ -51,6 +51,13 @@ int main( int argc, char** argv )
   printf("-- Min dist : %f \n", min_dist );
   printf("-- Match count : %i \n", descriptors_object.rows );
 
+  std::vector< cv::DMatch >good_matches;
+
+  for( int i = 0; i < descriptors_object.rows; i++ )
+  { if( matches[i].distance < (max_dist/1.5) )
+      { good_matches.push_back( matches[i]); }
+  }
+
   // DRAW MATCHES
   Mat img_matches;
   drawMatches( img_object, keypoints_object, img_scene, keypoints_scene,
@@ -60,13 +67,13 @@ int main( int argc, char** argv )
   // FIND HOMOGRAPHY
   std::vector<Point2f> obj;
   std::vector<Point2f> scene;
-  for( size_t i = 0; i < matches.size(); i++ )
+  for( size_t i = 0; i < good_matches.size(); i++ )
   {
     obj.push_back( keypoints_object[ matches[i].queryIdx ].pt );
     scene.push_back( keypoints_scene[ matches[i].trainIdx ].pt );
   }
 
-  Mat H = findHomography( obj, scene, RANSAC );
+  Mat H = findHomography( obj, scene, RANSAC);
   if ( H.empty() ) {
      cvError(0,"MatchFinder","no no homography",__FILE__,__LINE__);
   }

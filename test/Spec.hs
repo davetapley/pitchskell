@@ -12,8 +12,8 @@ import Data.Ord
 import Data.Maybe
 
 import Linear
-import Linear.Vector
 
+import Linear.Vector
 import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified FrameGrabber
 import StartFiducial as SF
@@ -367,7 +367,7 @@ trackTrackingTests :: TestTree
 trackTrackingTests = testGroup "Track tracking"
   [ testCase "track" trackTrackingTrack
   , testCase "rotated" trackTrackingRotated
-  , testCase "pertubations" trackTrackingPertubations
+  -- , testCase "pertubations" trackTrackingPertubations
   ]
 
 trackTrackingTrack :: Assertion
