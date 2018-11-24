@@ -56,6 +56,7 @@ unitTests = testGroup "Unit tests"
 startFiducialTests :: TestTree
 startFiducialTests = testGroup "Start fiducial tests"
   [ testCase "Start fiducial position" testStartFiducialPosition
+  , testCase "Start fiducial transform" testStartFiducialTransform
   , testCase "Start fiducial consistency" testStartFiducialConsistency
   ]
 
@@ -63,6 +64,9 @@ startFiducialTests = testGroup "Start fiducial tests"
 idleNoCarsRotated =
     CV.exceptError $ coerceMat $ unsafePerformIO $
       CV.imdecode CV.ImreadUnchanged <$> B.readFile "test/images/idle-no-cars-0-rotated.png"
+
+idleNoCarsRotatedStart = Track.Segment Track.Straight (V2 383 487) $ mkTransform (V2 (V2 0 (-55)) (V2 (55) 0))
+idleNoCarsRotatedTrack = fromJust $ Track.parseTrack idleNoCarsRotatedStart "sslrlsllrsslrlls"
 
 renderImage
     :: FilePath
@@ -82,6 +86,11 @@ testStartFiducialPosition = do
 
   points <- fromJust <$> TJ.findCenter idleNoCarsRotated
   renderImage "/tmp/drawCenterTJ.png" $ drawArrow idleNoCarsRotated points
+
+testStartFiducialTransform :: Assertion
+testStartFiducialTransform = do
+  points <- fromJust <$> SF.findCenter idleNoCarsRotated
+  transformFromVector points @?= Track.transform idleNoCarsRotatedStart
 
 video :: FilePath
 video = "test/video/idle-no-cars-0-3-frames.mp4"
@@ -109,8 +118,6 @@ tileMatcherTests = testGroup "Tile matcher tests"
   , testCase "Find track" tileMatcherFindTrack
   ]
 
-idleNoCarsRotatedStart = Track.Segment Track.Straight (V2 383 487) $ mkTransform (V2 (V2 0 (-55)) (V2 (55) 0))
-idleNoCarsRotatedTrack = fromJust $ Track.parseTrack idleNoCarsRotatedStart "sslrlsllrsslrlls"
 
 tileMatcherStraight :: Assertion
 tileMatcherStraight = do
