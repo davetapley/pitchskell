@@ -1,5 +1,6 @@
 module Transform
   ( Transform
+  , roundTransform
   , mkTransform
   , transformFromVector
   , getMat
@@ -18,6 +19,9 @@ import qualified Linear
 import Linear.V2
 
 newtype Transform = Transform (V2 (V2 Double)) deriving (Eq, Show)
+
+roundTransform :: Transform -> Transform
+roundTransform (Transform mat) = Transform (((realToFrac . Prelude.round) <$>) <$> mat)
 
 mkTransform :: V2 (V2 Double) -> Transform
 mkTransform mat =

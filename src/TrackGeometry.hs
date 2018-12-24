@@ -15,6 +15,12 @@ trackUnitVector = V2 1 0
 data StraightEdge = LeftEdge { straightEdgeStart :: Position, straightEdgeStop :: Position }
                   | RightEdge { straightEdgeStart :: Position, straightEdgeStop :: Position }
 
+
+-- Height
+-- given: 1.613
+-- measured (IRL): 1.58
+-- frame: 1.78
+
 straightEdges :: Segment -> Vector StraightEdge
 straightEdges (Segment Straight p t)  =
   let left = LeftEdge (relativePosition 0 (-0.5) p t) (relativePosition 1.613 (-0.5) p t)
