@@ -23,6 +23,11 @@ import Transform
 import Colors
 import TrackDebug(drawSegmentArrow)
 
+positionGeometryDebug :: FrameMat -> Segment -> FrameMat
+positionGeometryDebug frame segment
+  | tile segment == Straight = positionLineDebug frame segment
+  | otherwise = positionCircleDebug frame segment
+
 positionLineDebug :: FrameMat -> Segment -> FrameMat
 positionLineDebug frame (Segment tile p t) = exceptError $ do
   let p' = positionTile frame (Segment tile p t)

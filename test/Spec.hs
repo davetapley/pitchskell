@@ -37,6 +37,8 @@ import qualified Data.Vector as V
 import qualified Video
 import FrameWriter
 
+import Text.Printf
+
 import System.IO.Unsafe ( unsafePerformIO )
 
 main :: IO ()
@@ -150,9 +152,9 @@ segmentPositionerTests = testGroup "Tile positioner tests"
   , testCase "Corner radius" segmentPositionerMinRadius
   , testCase "Lines" segmentPositionerLines
   , testCase "Circles" segmentPositionerCircles
-  , testCase "positionStraight" segmentPositionerStraight
-  , testCase "positionLeft" segmentPositionerLeft
-  , testCase "positionRight" segmentPositionerRight
+  , testCase "Geometry debug" segmentPositionerGeometryDebug
+  , testCase "Position stays close-ish" segmentPositionerDistance
+  , testCase "Angle is close-ish" segmentPositionerAngle
   , testCase "track" segmentPositionerTrack
   ]
 
@@ -180,42 +182,19 @@ segmentPositionerCircles =
   let t = Track.transform idleNoCarsStart
     in V.length (SegmentPositioner.circles t idleNoCars) @?= 53
 
-segmentPositionerStraight :: Assertion
-segmentPositionerStraight = do
-  let straight = idleNoCarsTrack Loop.!! 1
-  distance (positionTile idleNoCars straight ) (Track.position straight) < trackWidth (Track.transform idleNoCarsStart) @? "Strayed too far"
-  renderImage "/tmp/segmentPositionerStraight.png" $ positionLineDebug idleNoCars straight
+segmentPositionerGeometryDebug :: Assertion
+segmentPositionerGeometryDebug = zipWithM_ image [0 :: Int ..] (Loop.unfold idleNoCarsTrack)
+  where image n = renderImage ("/tmp/segmentPositionerGeometryDebug." ++ printf "%02d" n ++ ".png") . positionGeometryDebug idleNoCars
 
-  let straight = idleNoCarsTrack Loop.!! 5
-  renderImage "/tmp/segmentPositionerStraightTwo.png" $ positionLineDebug idleNoCars straight
+segmentPositionerDistance :: Assertion
+segmentPositionerDistance = zipWithM_ (\n s -> closeEnough s @? printf "%02d" n ++ " strayed too far" ) [0 :: Int ..] (Loop.unfold idleNoCarsTrack)
+  where closeEnough s = distance (positionTile idleNoCars s ) (Track.position s) < (trackWidth (Track.transform idleNoCarsStart) / 2.0)
 
-  let straight = idleNoCarsTrack Loop.!! 9
-  renderImage "/tmp/segmentPositionerStraightThree.png" $ positionLineDebug idleNoCars straight
-
-  let straight = idleNoCarsTrack Loop.!! 10
-  renderImage "/tmp/segmentPositionerStraightFour.png" $ positionLineDebug idleNoCars straight
-
-  let straight = idleNoCarsTrack Loop.!! 15
-  renderImage "/tmp/segmentPositionerStraightFive.png" $ positionLineDebug idleNoCars straight
-
-segmentPositionerLeft :: Assertion
-segmentPositionerLeft = do
-  let left = idleNoCarsTrack Loop.!! 2
-  let dist = distance (positionTile idleNoCars left ) (Track.position left)
-  renderImage "/tmp/segmentPositionerLeft.png" $ positionCircleDebug idleNoCars left
-  dist < trackWidth (Track.transform idleNoCarsStart) @? "Strayed too far"
-
-  let left = idleNoCarsTrack Loop.!! 4
-  renderImage "/tmp/segmentPositionerLeftTwo.png" $ positionCircleDebug idleNoCars left
-
-segmentPositionerRight :: Assertion
-segmentPositionerRight = do
-  let right = idleNoCarsTrack Loop.!! 3
-  renderImage "/tmp/segmentPositionerRight.png" $ positionCircleDebug idleNoCars right
-  distance (positionTile idleNoCars right) (Track.position right) < trackWidth (Track.transform idleNoCarsStart) @? "Strayed too far"
-
-  let right = idleNoCarsTrack Loop.!! 8
-  renderImage "/tmp/segmentPositionerRightTwo.png" $ positionCircleDebug idleNoCars right
+segmentPositionerAngle :: Assertion
+segmentPositionerAngle = zipWithM_ (\n s -> closeEnough s @? printf "%02d" n ++ " rotated too much" ) [0 :: Int ..] (Loop.unfold idleNoCarsTrack)
+  where
+    closeEnough s = modDistance (angleFromTransform $ transformTile idleNoCars s ) (angleFromTransform $ Track.transform s) < (pi/4.0)
+    modDistance a b = let diff = abs (a - b) in min diff ((2*pi) - diff) -- https://stackoverflow.com/a/6193318/21115
 
 segmentPositionerTrack :: Assertion
 segmentPositionerTrack = do
