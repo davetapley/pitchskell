@@ -61,13 +61,12 @@ startFiducialTests = testGroup "Start fiducial tests"
   , testStartFiducialIsRectangle
   ]
 
---idleNoCarsRotated :: CV.Mat ('S ['D, 'D]) ('S 3) ('S Word8)
-idleNoCarsRotated =
+idleNoCars =
     CV.exceptError $ coerceMat $ unsafePerformIO $
-      CV.imdecode CV.ImreadUnchanged <$> B.readFile "test/images/idle-no-cars-0-rotated.png"
+      CV.imdecode CV.ImreadUnchanged <$> B.readFile "test/images/idle-no-cars-0.png"
 
-idleNoCarsRotatedStart = Track.Segment Track.Straight (V2 383 487) $ mkTransform (V2 (V2 0 (-57)) (V2 57 0))
-idleNoCarsRotatedTrack = fromJust $ Track.parseTrack idleNoCarsRotatedStart "sslrlsllrsslrlls"
+idleNoCarsStart = Track.Segment Track.Straight (V2 479 138) $ mkTransform (V2 (V2 (-53) (-3)) (V2 3 (-53)))
+idleNoCarsTrack = fromJust $ Track.parseTrack idleNoCarsStart "sslrlsllrsslrlls"
 
 renderImage
     :: FilePath
@@ -79,19 +78,19 @@ renderImage fp img = do
 
 testStartFiducialPosition :: Assertion
 testStartFiducialPosition = do
-  points@(V2 center tip) <- fromJust <$> SF.findCenter idleNoCarsRotated
-  renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCarsRotated points
+  points@(V2 center tip) <- fromJust <$> SF.findCenter idleNoCars
+  renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCars points
 
   (round <$> center) @?= V2 383 487
   (round <$> tip) @?= V2 383 430
 
-  points <- fromJust <$> TJ.findCenter idleNoCarsRotated
-  renderImage "/tmp/drawCenterTJ.png" $ drawArrow idleNoCarsRotated points
+  points <- fromJust <$> TJ.findCenter idleNoCars
+  renderImage "/tmp/drawCenterTJ.png" $ drawArrow idleNoCars points
 
 testStartFiducialTransform :: Assertion
 testStartFiducialTransform = do
-  points <- fromJust <$> SF.findCenter idleNoCarsRotated
-  roundTransform (transformFromVector points) @?= Track.transform idleNoCarsRotatedStart
+  points <- fromJust <$> SF.findCenter idleNoCars
+  roundTransform (transformFromVector points) @?= Track.transform idleNoCarsStart
 
 video :: FilePath
 video = "test/video/idle-no-cars-0-3-frames.mp4"
@@ -130,19 +129,19 @@ tileMatcherTests = testGroup "Tile matcher tests"
 
 tileMatcherStraight :: Assertion
 tileMatcherStraight = do
-  let straight = idleNoCarsRotatedTrack Loop.!! 1
-  renderImage "/tmp/tileMatcherStraight.png" $ TileMatcherDebug.drawTileMasks idleNoCarsRotated straight
+  let straight = idleNoCarsTrack Loop.!! 1
+  renderImage "/tmp/tileMatcherStraight.png" $ TileMatcherDebug.drawTileMasks idleNoCars straight
 
 tileMatcherLeft :: Assertion
 tileMatcherLeft = do
-  let left = idleNoCarsRotatedTrack Loop.!! 2
-  renderImage "/tmp/tileMatcherLeft.png" $ TileMatcherDebug.drawTileMasks idleNoCarsRotated left
+  let left = idleNoCarsTrack Loop.!! 2
+  renderImage "/tmp/tileMatcherLeft.png" $ TileMatcherDebug.drawTileMasks idleNoCars left
 
 tileMatcherDrawTrackMask :: Assertion
-tileMatcherDrawTrackMask =  renderImage "/tmp/tileMatcherTrack.png" $ TileMatcherDebug.drawTrackMask idleNoCarsRotated idleNoCarsRotatedTrack
+tileMatcherDrawTrackMask =  renderImage "/tmp/tileMatcherTrack.png" $ TileMatcherDebug.drawTrackMask idleNoCars idleNoCarsTrack
 
 tileMatcherFindTrack :: Assertion
-tileMatcherFindTrack = TileMatcher.findTrack idleNoCarsRotated idleNoCarsRotatedStart @?= idleNoCarsRotatedTrack
+tileMatcherFindTrack = TileMatcher.findTrack idleNoCars idleNoCarsStart @?= idleNoCarsTrack
 
 segmentPositionerTests :: TestTree
 segmentPositionerTests = testGroup "Tile positioner tests"
@@ -158,71 +157,71 @@ segmentPositionerTests = testGroup "Tile positioner tests"
   ]
 
 segmentPositionerInpaintWalls :: Assertion
-segmentPositionerInpaintWalls = renderImage "/tmp/segmentPositionerInpaintWalls.png" (showInpaintWalls idleNoCarsRotated)
+segmentPositionerInpaintWalls = renderImage "/tmp/segmentPositionerInpaintWalls.png" (showInpaintWalls idleNoCars)
 
 segmentPositionerCanny :: Assertion
 segmentPositionerCanny = do
-  let t = Track.transform idleNoCarsRotatedStart
-  let edgeImg = showHough t idleNoCarsRotated
+  let t = Track.transform idleNoCarsStart
+  let edgeImg = showHough t idleNoCars
   renderImage "/tmp/segmentPositionerCannyHough.png" edgeImg
-  let edgeImgInpaint = showHough t . inpaintWalls $ idleNoCarsRotated
+  let edgeImgInpaint = showHough t . inpaintWalls $ idleNoCars
   renderImage "/tmp/segmentPositionerCannyHoughInpaintedWalls.png" edgeImgInpaint
 
 segmentPositionerMinRadius :: Assertion
 segmentPositionerMinRadius =
-  let t = Track.transform idleNoCarsRotatedStart
+  let t = Track.transform idleNoCarsStart
     in round (innerCornerCircleRadius t) @?= 18
 
 segmentPositionerLines :: Assertion
-segmentPositionerLines = V.length (SegmentPositioner.lines idleNoCarsRotated) @?= 38
+segmentPositionerLines = V.length (SegmentPositioner.lines idleNoCars) @?= 38
 
 segmentPositionerCircles :: Assertion
 segmentPositionerCircles =
-  let t = Track.transform idleNoCarsRotatedStart
-    in V.length (SegmentPositioner.circles t idleNoCarsRotated) @?= 53
+  let t = Track.transform idleNoCarsStart
+    in V.length (SegmentPositioner.circles t idleNoCars) @?= 53
 
 segmentPositionerStraight :: Assertion
 segmentPositionerStraight = do
-  let straight = idleNoCarsRotatedTrack Loop.!! 1
-  distance (positionTile idleNoCarsRotated straight ) (Track.position straight) < trackWidth (Track.transform idleNoCarsRotatedStart) @? "Strayed too far"
-  renderImage "/tmp/segmentPositionerStraight.png" $ positionLineDebug idleNoCarsRotated straight
+  let straight = idleNoCarsTrack Loop.!! 1
+  distance (positionTile idleNoCars straight ) (Track.position straight) < trackWidth (Track.transform idleNoCarsStart) @? "Strayed too far"
+  renderImage "/tmp/segmentPositionerStraight.png" $ positionLineDebug idleNoCars straight
 
-  let straight = idleNoCarsRotatedTrack Loop.!! 5
-  renderImage "/tmp/segmentPositionerStraightTwo.png" $ positionLineDebug idleNoCarsRotated straight
+  let straight = idleNoCarsTrack Loop.!! 5
+  renderImage "/tmp/segmentPositionerStraightTwo.png" $ positionLineDebug idleNoCars straight
 
-  let straight = idleNoCarsRotatedTrack Loop.!! 9
-  renderImage "/tmp/segmentPositionerStraightThree.png" $ positionLineDebug idleNoCarsRotated straight
+  let straight = idleNoCarsTrack Loop.!! 9
+  renderImage "/tmp/segmentPositionerStraightThree.png" $ positionLineDebug idleNoCars straight
 
-  let straight = idleNoCarsRotatedTrack Loop.!! 10
-  renderImage "/tmp/segmentPositionerStraightFour.png" $ positionLineDebug idleNoCarsRotated straight
+  let straight = idleNoCarsTrack Loop.!! 10
+  renderImage "/tmp/segmentPositionerStraightFour.png" $ positionLineDebug idleNoCars straight
 
-  let straight = idleNoCarsRotatedTrack Loop.!! 15
-  renderImage "/tmp/segmentPositionerStraightFive.png" $ positionLineDebug idleNoCarsRotated straight
+  let straight = idleNoCarsTrack Loop.!! 15
+  renderImage "/tmp/segmentPositionerStraightFive.png" $ positionLineDebug idleNoCars straight
 
 segmentPositionerLeft :: Assertion
 segmentPositionerLeft = do
-  let left = idleNoCarsRotatedTrack Loop.!! 2
-  let dist = distance (positionTile idleNoCarsRotated left ) (Track.position left)
-  renderImage "/tmp/segmentPositionerLeft.png" $ positionCircleDebug idleNoCarsRotated left
-  dist < trackWidth (Track.transform idleNoCarsRotatedStart) @? "Strayed too far"
+  let left = idleNoCarsTrack Loop.!! 2
+  let dist = distance (positionTile idleNoCars left ) (Track.position left)
+  renderImage "/tmp/segmentPositionerLeft.png" $ positionCircleDebug idleNoCars left
+  dist < trackWidth (Track.transform idleNoCarsStart) @? "Strayed too far"
 
-  let left = idleNoCarsRotatedTrack Loop.!! 4
-  renderImage "/tmp/segmentPositionerLeftTwo.png" $ positionCircleDebug idleNoCarsRotated left
+  let left = idleNoCarsTrack Loop.!! 4
+  renderImage "/tmp/segmentPositionerLeftTwo.png" $ positionCircleDebug idleNoCars left
 
 segmentPositionerRight :: Assertion
 segmentPositionerRight = do
-  let right = idleNoCarsRotatedTrack Loop.!! 3
-  renderImage "/tmp/segmentPositionerRight.png" $ positionCircleDebug idleNoCarsRotated right
-  distance (positionTile idleNoCarsRotated right) (Track.position right) < trackWidth (Track.transform idleNoCarsRotatedStart) @? "Strayed too far"
+  let right = idleNoCarsTrack Loop.!! 3
+  renderImage "/tmp/segmentPositionerRight.png" $ positionCircleDebug idleNoCars right
+  distance (positionTile idleNoCars right) (Track.position right) < trackWidth (Track.transform idleNoCarsStart) @? "Strayed too far"
 
-  let right = idleNoCarsRotatedTrack Loop.!! 8
-  renderImage "/tmp/segmentPositionerRightTwo.png" $ positionCircleDebug idleNoCarsRotated right
+  let right = idleNoCarsTrack Loop.!! 8
+  renderImage "/tmp/segmentPositionerRightTwo.png" $ positionCircleDebug idleNoCars right
 
 segmentPositionerTrack :: Assertion
 segmentPositionerTrack = do
-  let positions = positionSegments idleNoCarsRotated idleNoCarsRotatedTrack
-  renderImage "/tmp/segmentPositionerTrackMask.png" $ TileMatcherDebug.drawTrackMask idleNoCarsRotated positions
-  renderImage "/tmp/segmentPositionerTrackOutline.png" $ drawTrackOutline idleNoCarsRotated positions
+  let positions = positionSegments idleNoCars idleNoCarsTrack
+  renderImage "/tmp/segmentPositionerTrackMask.png" $ TileMatcherDebug.drawTrackMask idleNoCars positions
+  renderImage "/tmp/segmentPositionerTrackOutline.png" $ drawTrackOutline idleNoCars positions
 
 trackDebugTests :: TestTree
 trackDebugTests = testGroup "TrackDebug tests"
@@ -231,10 +230,10 @@ trackDebugTests = testGroup "TrackDebug tests"
   ]
 
 trackDebugArrows :: Assertion
-trackDebugArrows = renderImage "/tmp/trackArrows.png" $ drawTrackArrows idleNoCarsRotated idleNoCarsRotatedTrack
+trackDebugArrows = renderImage "/tmp/trackArrows.png" $ drawTrackArrows idleNoCars idleNoCarsTrack
 
 trackDebugOutline :: Assertion
-trackDebugOutline = renderImage "/tmp/trackOutline.png" $ drawTrackOutline idleNoCarsRotated idleNoCarsRotatedTrack
+trackDebugOutline = renderImage "/tmp/trackOutline.png" $ drawTrackOutline idleNoCars idleNoCarsTrack
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"
@@ -381,21 +380,21 @@ trackTransform = do
 
 trackTrackingTests :: TestTree
 trackTrackingTests = testGroup "Track tracking"
-  [ -- testCase "track" trackTrackingTrack
-  -- , testCase "rotated" trackTrackingRotated
+  [ testCase "track" trackTrackingTrack
+  , testCase "rotated" trackTracking
   -- , testCase "pertubations" trackTrackingPertubations
   ]
 
 trackTrackingTrack :: Assertion
 trackTrackingTrack = do
-  track <- fromJust <$> TT.track idleNoCarsRotated
-  renderImage "/tmp/trackTrackerOutline.png" $ drawTrackOutline idleNoCarsRotated track
+  track <- fromJust <$> TT.track idleNoCars
+  renderImage "/tmp/trackTrackerOutline.png" $ drawTrackOutline idleNoCars track
 
-trackTrackingRotated :: Assertion
-trackTrackingRotated = do
-  (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames "test/video/idle-no-cars-0.mov"
+trackTracking :: Assertion
+trackTracking = do
+  (frames :: [FrameGrabber.TestMat]) <- FrameGrabber.getFrames "test/video/idle-no-cars-0-3-frames.mp4"
   outlines <- mapM maybeOutline frames
-  FrameWriter.writeFrames "/tmp/trackTrackingRotated.mov" outlines
+  FrameWriter.writeFrames "/tmp/trackTracking.mov" outlines
 
 trackTrackingPertubations :: Assertion
 trackTrackingPertubations = do
