@@ -71,17 +71,18 @@ drawOutlines
 
 drawOutlines frame segments imgM = do
   matCopyToM imgM zero frame Nothing
-  M.mapM_ (drawOutline imgM) segments
+  M.mapM_ (drawOutline imgM) (Prelude.zip [0..] segments)
 
 drawOutline
   :: (MonadError CvException m, PrimMonad m)
     => Mut (Mat ('S '[h, w]) c d) (PrimState m)
-    -> Segment
+    -> (Int, Segment)
     -> m ()
 
-drawOutline imgM (Segment Straight p t) =
+drawOutline imgM (n, Segment Straight p t) =
   let origin = round <$> (p + (V2 0 (-0.5) `transOn` t))
       size = round <$> (V2 1.613 1 `transOn` t)
+      middle = round <$> p + (V2 (1.613/2.0) 0 `transOn` t)
       points = V.fromList $ map (\pt -> round <$> p + (pt `transOn` t)) [
         V2 0 (-0.5),
         V2 0   0.5,
@@ -92,13 +93,15 @@ drawOutline imgM (Segment Straight p t) =
     line imgM (points ! 1) (points ! 2) green 1 LineType_AA 0
     line imgM (points ! 2) (points ! 3) green 1 LineType_AA 0
     line imgM (points ! 3) (points ! 0) green 1 LineType_AA 0
+    putText imgM (T.pack (show n)) middle (Font FontHersheySimplex NotSlanted 0.3) green 1 LineType_AA False
 
-drawOutline imgM (Segment Left p t) =
+drawOutline imgM (n, Segment Left p t) =
   let origin = round <$> moveToCircleOrigin (Segment Left p t)
       outerAxis = round . abs <$> (V2 1.32 1.32 `transOn` t)
       innerAxis = round . abs <$> (V2 0.32 0.32 `transOn` t)
       V2 x y = trackUnitVector `transOn` t
       angle = atan2 y x / pi * 180
+      middle = round <$> p + (V2 0.5 0 `transOn` t)
       points = V.fromList $ map (\pt -> round <$> p + (pt `transOn` t)) [
         V2 0 (-0.5),
         V2 0   0.5,
@@ -109,13 +112,15 @@ drawOutline imgM (Segment Left p t) =
     ellipse imgM origin innerAxis angle 0 90 green 1 LineType_8 0
     line imgM (points ! 0) (points ! 1) green 1 LineType_AA 0
     line imgM (points ! 2) (points ! 3) green 1 LineType_AA 0
+    putText imgM (T.pack (show n)) middle (Font FontHersheySimplex NotSlanted 0.3) green 1 LineType_AA False
 
-drawOutline imgM (Segment Right p t) =
+drawOutline imgM (n, Segment Right p t) =
   let origin = round <$> moveToCircleOrigin (Segment Right p t)
       outerAxis = round . abs <$> (V2 1.32 1.32 `transOn` t)
       innerAxis = round . abs <$> (V2 0.32 0.32 `transOn` t)
       V2 x y = trackUnitVector `transOn` t
       angle = 180 + atan2 y x / pi * 180
+      middle = round <$> p + (V2 0.5 0 `transOn` t)
       points = V.fromList $ map (\pt -> round <$> p + (pt `transOn` t)) [
         V2 0 (-0.5),
         V2 0   0.5,
@@ -126,3 +131,4 @@ drawOutline imgM (Segment Right p t) =
     ellipse imgM origin innerAxis angle 90 180 green 1 LineType_8 0
     line imgM (points ! 0) (points ! 1) green 1 LineType_AA 0
     line imgM (points ! 2) (points ! 3) green 1 LineType_AA 0
+    putText imgM (T.pack (show n)) middle (Font FontHersheySimplex NotSlanted 0.3) green 1 LineType_AA False
