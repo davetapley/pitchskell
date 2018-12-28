@@ -38,9 +38,9 @@ positionLineDebug frame (Segment tile p t) = exceptError $ do
     let dot = round $ trackWidth t / 32.0
         putText' str pos color = putText imgM (T.pack str) pos (Font FontHersheySimplex NotSlanted 0.3) color 1 LineType_AA False
         showAngle angle = show (round $ angle / (2*pi) * 360)
-    for_ (candidateLines (Segment tile p t) frame) $ \(lineSegment, edge) -> do
-      arrowedLine imgM (lineSegmentStart lineSegment) (lineSegmentStop  lineSegment) (edgeColor edge) 1 LineType_AA 0 0.15
-      putText' (showAngle $ angleFromPoints $ pointsFromLineSegment lineSegment) ((round <$>) <$> (^._x) $ pointsFromLineSegment lineSegment :: V2 Int32) (edgeColor edge)
+    for_ (candidateLines (Segment tile p t) frame) $ \((start, end), edge) -> do
+      arrowedLine imgM (round <$> start) (round <$> end) (edgeColor edge) 1 LineType_AA 0 0.15
+      putText' (showAngle $ angleFromPoints $ (V2 start end)) (round <$> start) (edgeColor edge)
 
     circle imgM  (round <$> p) dot white (-1) LineType_AA 0
     drawSegmentArrow imgM white (Segment tile p t)
@@ -70,7 +70,7 @@ showHough t frame = exceptError $ do
   withMatM (h ::: w ::: Z) (Proxy :: Proxy 3) (Proxy :: Proxy Word8) white $ \imgM -> do
       void $ matCopyToM imgM zero edgesBgr Nothing
       let lines' = lines frame
-      for_  lines' $ \lineSegment -> line imgM (lineSegmentStart lineSegment) (lineSegmentStop  lineSegment) red 2 LineType_8 0
+      for_  lines' $ \(start, end) -> line imgM (round <$> start) (round <$> end) red 2 LineType_8 0
 
       imgG <- cvtColor bgr gray frame
       let minRadius = round $ innerCornerCircleRadius t * 0.95

@@ -43,15 +43,13 @@ positionTile frame segment =
 mean :: Fractional a => V.Vector a -> a
 mean xs = V.sum xs / realToFrac (V.length xs)
 
-pointsFromLineSegment :: LineSegment Int32 -> V2 (V2 Double)
-pointsFromLineSegment (LineSegment p0 p1) = V2 ((realToFrac <$>) p0) ((realToFrac <$>) p1)
-
 transformTile :: FrameMat -> Segment -> Transform
 transformTile frame s@(Segment Straight p t) =
-  let lines = candidateLines s frame
+  let lines = fmap fst (candidateLines s frame)
       angle = angleFromTransform t
-      -- TODO: Is taking the mean of an angle bad (because modulus)?
-      lineAngle = mean $ fmap (angleFromPoints . pointsFromLineSegment . fst ) lines
+      -- TODO: Taking the mean of an angle bad (because modulus), need to do this:
+      -- https://stackoverflow.com/a/491769/21115
+      lineAngle = angle -- mean $ fmap angleFromPoints lines
       -- lineAngle might be pointing in the opposite direction to the segment
       angle' = if abs(angle - lineAngle) < (pi/2) then lineAngle else (lineAngle + pi) `mod'` pi
     in if V.null lines then t else transformFromAngle t angle'
@@ -60,10 +58,12 @@ transformTile frame (Segment tile p t) = t
 
 type EdgeMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)
 
-candidateLines :: Segment -> FrameMat -> Vector (LineSegment Int32, StraightEdge)
+type Line = (Position, Position)
+
+candidateLines :: Segment -> FrameMat -> Vector (Line, StraightEdge)
 candidateLines segment frame = V.mapMaybe (\line -> (,) line <$> isCandidateLine segment line ) (lines frame)
 
-isCandidateLine :: Segment -> LineSegment Int32 -> Maybe StraightEdge
+isCandidateLine :: Segment -> Line -> Maybe StraightEdge
 isCandidateLine (Segment Straight p t) line =
   let edges  = straightEdges (Segment Straight p t)
       maxDist = trackWidth t / 4.0
@@ -71,13 +71,15 @@ isCandidateLine (Segment Straight p t) line =
 
 isCandidateLine Segment {}  _ = error "Expect Straight"
 
+-- normalizeLineDirection :: Transform -> LineSegment Int32 -> LineSegment Int32
+-- normalizeLineDirection t line =
+--   let lineAngle = angleFromPoints line
+
 -- https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
 -- https://stackoverflow.com/a/2233538/21115
-lineDistance :: LineSegment Int32 -> V2 Double -> Double
-lineDistance (LineSegment start end) (V2 x0 y0) =
-  let (V2 x1 y1) = realToFrac <$> start
-      (V2 x2 y2) = realToFrac <$> end
-      px = x2 - x1
+lineDistance :: Line -> Position -> Double
+lineDistance ((V2 x1 y1), (V2 x2 y2)) (V2 x0 y0) =
+  let px = x2 - x1
       py = y2 - y1
       something =  px*px + py*py
       u =  ((x0 - x1) * px + (y0 - y1) * py) / something
@@ -92,10 +94,15 @@ lineDistance (LineSegment start end) (V2 x0 y0) =
 toEdges :: FrameMat -> EdgeMat
 toEdges frame = exceptError $ canny 30 200 Nothing CannyNormL1 frame
 
-lines :: FrameMat -> Vector (LineSegment Int32)
+lines :: FrameMat -> Vector Line
 lines frame = unsafePerformIO $ do
   imgM <- CV.thaw (toEdges frame)
-  exceptErrorM $ houghLinesP 1 (pi / 180) 80 (Just 30) (Just 10) imgM
+  segments <- exceptErrorM $ houghLinesP 1 (pi / 180) 80 (Just 30) (Just 10) imgM
+  return $ V.map pointsFromLineSegment segments
+
+  where
+    pointsFromLineSegment :: LineSegment Int32 -> Line
+    pointsFromLineSegment (LineSegment p0 p1) = ((realToFrac <$>) p0,  (realToFrac <$>) p1)
 
 candidateCircles :: Segment -> FrameMat -> Vector CircleCenter
 candidateCircles segment frame = filter (isCandidateCircle segment) (circles (transform segment) frame)
