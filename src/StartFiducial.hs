@@ -29,7 +29,7 @@ findCenter = runMaybeT . findStartTileGeometry
 findStartTileGeometry :: FrameMat -> MaybeT IO (V2 (V2 Double))
 findStartTileGeometry frame = do
   let sift = mkSift defaultSiftParams
-  (keypointsObject, descriptorsObject) <- liftMaybe $ safeSiftDetectAndCompute sift startTile
+  (keypointsObject, descriptorsObject) <- liftMaybe $ safeSiftDetectAndCompute sift startSticker
   (keypointsScene, descriptorsScene) <- liftMaybe $ safeSiftDetectAndCompute sift frame
 
   fbmatcher <- liftIO $ newFlannBasedMatcher (def { indexParams = FlannKDTreeIndexParams 1 })
@@ -38,10 +38,10 @@ findStartTileGeometry frame = do
   let (framePoints, startPoints) =  V.unzip $ V.map (getMatchingPoints keypointsObject keypointsScene) matches
   homography <- liftMaybe $ exceptError $ findHomography framePoints startPoints (def { fhpMethod = FindHomographyMethod_RANSAC, fhpRansacReprojThreshold = 1 })
 
-  let framePoints = fmap realToFrac . fromPoint <$> perspectiveTransform tilePoints (fst homography)
+  let framePoints = fmap realToFrac . fromPoint <$> perspectiveTransform stickerPoints (fst homography)
   guard (isRectangle framePoints)
 
-  return $ getStartVector framePoints
+  return $ getStartVectorFromStartSticker framePoints
 
 safeSiftDetectAndCompute :: Sift -> FrameMat -> Maybe (V.Vector KeyPoint, Mat 'D 'D 'D)
 safeSiftDetectAndCompute sift mat =
@@ -51,12 +51,16 @@ safeSiftDetectAndCompute sift mat =
        else Just result
 
 -- From middle of 'bottom', pointing to middle of 'top', having magnitude of track width
-getStartVector :: Vector (V2 Double) -> V2 (V2 Double)
-getStartVector vs =
-  let a = vs ! 0
-      b = vs ! 1
-      origin = a + ((b - a) / 2)
-      ortho = origin + perp (b - a)
+getStartVectorFromStartSticker :: Vector (V2 Double) -> V2 (V2 Double)
+getStartVectorFromStartSticker vs =
+  let bl = vs ! 0
+      br = vs ! 1
+      tl = vs ! 2
+      tr = vs ! 3
+      bm = (bl + br) / 2 -- 'bottom-middle'
+      tm = (tl + tr) / 2
+      origin = bm + ((bm - tm) * 1.8)
+      ortho = origin + perp (br - bl)
     in V2 origin ortho
 
 getMatchingPoints :: V.Vector KeyPoint -> V.Vector KeyPoint -> DMatch -> (V2 CDouble, V2 CDouble)
@@ -72,11 +76,6 @@ getMatchingPointIdx keypoints f dmatch =
       queryPtRec = keyPointAsRec queryPt
      in toCDouble . float2Double <$> kptPoint queryPtRec
 
-startTile :: Mat ('S ['D, 'D]) ('S 3) ('S Word8)
-startTile =
-    exceptError $ coerceMat $ unsafePerformIO $
-      imdecode ImreadUnchanged <$> B.readFile "data/start-tile.png"
-
 isRectangle :: Vector (V2 Double) -> Bool
 isRectangle v =
   let bottom = vDist 0 1
@@ -88,10 +87,15 @@ isRectangle v =
             similar x y = abs(x-y) / ((x+y) / 2) < 0.8
             avg x y = x + y / 2
 
-tilePoints :: Vector (V2 CDouble)
-tilePoints =
-  let [h, w] = fmap fromIntegral . miShape . matInfo $ startTile
-  in if w < h
-    then error "Expect start tile to be pointing along the X axis"
+startSticker :: Mat ('S ['D, 'D]) ('S 3) ('S Word8)
+startSticker =
+    exceptError $ coerceMat $ unsafePerformIO $
+      imdecode ImreadUnchanged <$> B.readFile "data/start-sticker.png"
+
+stickerPoints :: Vector (V2 CDouble)
+stickerPoints =
+  let [h, w] = fmap fromIntegral . miShape . matInfo $ startSticker
+  in if w > h
+    then error "Expect start sticker to be pointing along the X axis"
     -- Along the 'bottom', up the 'left', along the 'top', and back down the 'right'
     else V.fromList [V2 w 0, V2 w h, V2 0 h, V2 0 0]

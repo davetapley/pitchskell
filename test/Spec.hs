@@ -68,7 +68,7 @@ testStartFiducialPosition = do
   points@(V2 center tip) <- fromJust <$> SF.findCenter idleNoCars
   renderImage "/tmp/drawCenter.png" $ drawArrow idleNoCars points
 
-  (round <$> center) @?= V2 383 487
+  (round <$> center) @?= V2 485 151
   (round <$> tip) @?= V2 383 430
 
 testStartFiducialTransform :: Assertion
