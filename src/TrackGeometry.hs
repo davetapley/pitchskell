@@ -16,6 +16,8 @@ data StraightEdge = LeftEdge { straightEdgeStart :: Position, straightEdgeStop :
                   | RightEdge { straightEdgeStart :: Position, straightEdgeStop :: Position }
 
 
+angleFromStraightEdge e = angleFromPoints (V2 (straightEdgeStart e) (straightEdgeStop e))
+
 -- Height
 -- given: 1.613
 -- measured (IRL): 1.58

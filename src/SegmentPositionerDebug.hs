@@ -38,7 +38,7 @@ positionLineDebug frame (Segment tile p t) = exceptError $ do
     let dot = round $ trackWidth t / 32.0
         putText' str pos color = putText imgM (T.pack str) pos (Font FontHersheySimplex NotSlanted 0.3) color 1 LineType_AA False
         showAngle angle = show (round $ angle / (2*pi) * 360)
-    for_ (candidateLines (Segment tile p t) frame) $ \((start, end), edge) -> do
+    for_ (normalizeLines $ candidateLines (Segment tile p t) frame) $ \((start, end), edge) -> do
       arrowedLine imgM (round <$> start) (round <$> end) (edgeColor edge) 1 LineType_AA 0 0.15
       putText' (showAngle $ angleFromPoints $ (V2 start end)) (round <$> start) (edgeColor edge)
 

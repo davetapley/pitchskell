@@ -9,6 +9,7 @@ import Data.Function(on)
 import Data.Int
 import Data.List(groupBy)
 import Data.Proxy
+import Data.Tuple(swap)
 import Data.Word
 import Data.Vector as V
 import Linear
@@ -45,14 +46,11 @@ mean xs = V.sum xs / realToFrac (V.length xs)
 
 transformTile :: FrameMat -> Segment -> Transform
 transformTile frame s@(Segment Straight p t) =
-  let lines = fmap fst (candidateLines s frame)
+  let lines = fmap fst (normalizeLines $ candidateLines s frame)
+      (a,b) = meanLine lines
+      lineAngle = angleFromPoints (V2 a b)
       angle = angleFromTransform t
-      -- TODO: Taking the mean of an angle bad (because modulus), need to do this:
-      -- https://stackoverflow.com/a/491769/21115
-      lineAngle = angle -- mean $ fmap angleFromPoints lines
-      -- lineAngle might be pointing in the opposite direction to the segment
-      angle' = if abs(angle - lineAngle) < (pi/2) then lineAngle else (lineAngle + pi) `mod'` pi
-    in if V.null lines then t else transformFromAngle t angle'
+    in if V.null lines then t else transformFromAngle t lineAngle
 
 transformTile frame (Segment tile p t) = t
 
@@ -60,8 +58,12 @@ type EdgeMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)
 
 type Line = (Position, Position)
 
+-- TODO https://hackage.haskell.org/package/foldl
+meanLine :: Vector Line -> Line
+meanLine lines = (mean $ V.map fst lines, mean $ V.map snd lines)
+
 candidateLines :: Segment -> FrameMat -> Vector (Line, StraightEdge)
-candidateLines segment frame = V.mapMaybe (\line -> (,) line <$> isCandidateLine segment line ) (lines frame)
+candidateLines segment frame = V.mapMaybe (\line -> (,) line <$> isCandidateLine segment line) (lines frame)
 
 isCandidateLine :: Segment -> Line -> Maybe StraightEdge
 isCandidateLine (Segment Straight p t) line =
@@ -71,9 +73,16 @@ isCandidateLine (Segment Straight p t) line =
 
 isCandidateLine Segment {}  _ = error "Expect Straight"
 
--- normalizeLineDirection :: Transform -> LineSegment Int32 -> LineSegment Int32
--- normalizeLineDirection t line =
---   let lineAngle = angleFromPoints line
+modDistance a b = let diff = abs (a - b) in min diff ((2*pi) - diff) -- https://stackoverflow.com/a/6193318/21115
+
+normalizeLines :: Vector (Line, StraightEdge) -> Vector (Line, StraightEdge)
+normalizeLines = V.map (\(line, edge) -> if isOpposite (line, edge) then (swap line, edge) else (line, edge))
+
+isOpposite ((lineStart, lineEnd), edge) =
+  let edgeAngle = angleFromStraightEdge edge
+      lineAngle = angleFromPoints (V2 lineStart lineEnd)
+      distance = edgeAngle `modDistance` lineAngle
+  in distance > pi/2.0
 
 -- https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
 -- https://stackoverflow.com/a/2233538/21115
