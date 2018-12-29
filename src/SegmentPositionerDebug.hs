@@ -40,7 +40,7 @@ positionLineDebug frame (Segment tile p t) = exceptError $ do
         showAngle angle = show (round $ angle / (2*pi) * 360)
     for_ (normalizeLines $ candidateLines (Segment tile p t) frame) $ \((start, end), edge) -> do
       arrowedLine imgM (round <$> start) (round <$> end) (edgeColor edge) 1 LineType_AA 0 0.15
-      putText' (showAngle $ angleFromPoints $ (V2 start end)) (round <$> start) (edgeColor edge)
+      putText' (showAngle $ angleFromPoints $ (start, end)) (round <$> start) (edgeColor edge)
 
     circle imgM  (round <$> p) dot white (-1) LineType_AA 0
     drawSegmentArrow imgM white (Segment tile p t)

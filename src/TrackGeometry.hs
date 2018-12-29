@@ -16,7 +16,7 @@ data StraightEdge = LeftEdge { straightEdgeStart :: Position, straightEdgeStop :
                   | RightEdge { straightEdgeStart :: Position, straightEdgeStop :: Position }
 
 
-angleFromStraightEdge e = angleFromPoints (V2 (straightEdgeStart e) (straightEdgeStop e))
+angleFromStraightEdge e = angleFromPoints (straightEdgeStart e, straightEdgeStop e)
 
 -- Height
 -- given: 1.613
@@ -36,8 +36,3 @@ moveToCircleOrigin (Segment Right p t)  = relativePosition 0 0.82 p t
 moveFromCircleOrigin :: Segment -> Position -> Position
 moveFromCircleOrigin (Segment Left _ t) p = relativePosition 0 0.82 p t
 moveFromCircleOrigin (Segment Right _ t) p = relativePosition 0 (-0.82) p t
-
-angleFromPoints :: V2 (V2 Double) -> Double
-angleFromPoints (V2 (V2 x0 y0) (V2 x1 y1)) =
-  let a = atan2 (y1 - y0) (x1 - x0)
-  in if a >= 0 then a else (pi*2) + a

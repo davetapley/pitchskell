@@ -1,5 +1,6 @@
 module Transform
   ( Transform
+  , angleFromPoints
   , roundTransform
   , mkTransform
   , transformFromVector

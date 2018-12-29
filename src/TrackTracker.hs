@@ -5,7 +5,6 @@ import Transform(transformFromVector)
 import StartFiducial(findCenter)
 import TileMatcher(findTrack)
 import SegmentPositioner(positionSegments)
-import TrackGeometry(angleFromPoints)
 
 import Data.Word
 import Linear.Metric

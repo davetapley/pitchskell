@@ -47,8 +47,7 @@ mean xs = V.sum xs / realToFrac (V.length xs)
 transformTile :: FrameMat -> Segment -> Transform
 transformTile frame s@(Segment Straight p t) =
   let lines = fmap fst (normalizeLines $ candidateLines s frame)
-      (a,b) = meanLine lines
-      lineAngle = angleFromPoints (V2 a b)
+      lineAngle = angleFromPoints (meanLine lines)
       angle = angleFromTransform t
     in if V.null lines then t else transformFromAngle t lineAngle
 
@@ -78,9 +77,9 @@ modDistance a b = let diff = abs (a - b) in min diff ((2*pi) - diff) -- https://
 normalizeLines :: Vector (Line, StraightEdge) -> Vector (Line, StraightEdge)
 normalizeLines = V.map (\(line, edge) -> if isOpposite (line, edge) then (swap line, edge) else (line, edge))
 
-isOpposite ((lineStart, lineEnd), edge) =
+isOpposite (line, edge) =
   let edgeAngle = angleFromStraightEdge edge
-      lineAngle = angleFromPoints (V2 lineStart lineEnd)
+      lineAngle = angleFromPoints line
       distance = edgeAngle `modDistance` lineAngle
   in distance > pi/2.0
 
