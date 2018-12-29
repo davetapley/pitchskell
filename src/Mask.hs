@@ -31,12 +31,12 @@ renderMask
 
 renderMask (Segment Straight p t) imgM =
   let origin = round <$> (p + (V2 0 (0.5) `transOn` t))
-      size = round <$> (V2 1.613 1 `transOn` t)
+      size = round <$> (V2 trackLength 1 `transOn` t)
       points = V.fromList $ map (\pt -> round <$> p + (pt `transOn` t)) [
         V2 0 (-0.5),
         V2 0   0.5,
-        V2 1.613   0.5,
-        V2 1.613 (-0.5)]
+        V2 trackLength   0.5,
+        V2 trackLength (-0.5)]
   in fillConvexPoly imgM points white LineType_AA 0
 
 renderMask (Segment Left p t) imgM =

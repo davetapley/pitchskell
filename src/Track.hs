@@ -50,11 +50,14 @@ parseTrack start = (mkTrack start <$>) . mapM parseTile . L.chars
 nextSegment :: Segment -> Tile -> Segment
 nextSegment segment tile = Segment tile (exitPosition segment) (exitTransform segment)
 
+trackLength = 1.58
+cornerWidth = 0.82 -- From origin out to left or right edge
+
 exitPosition :: Segment -> Position
 exitPosition (Segment tile p t)
-  | tile == Straight = p + (V2 1.613 0 `transOn` t)
-  | tile == Right = p + (V2 0.82 0.82 `transOn` t)
-  | tile == Left = p + (V2 0.82 (-0.82) `transOn` t)
+  | tile == Straight = p + (V2 trackLength 0 `transOn` t)
+  | tile == Right = p + (V2 cornerWidth cornerWidth `transOn` t)
+  | tile == Left = p + (V2 cornerWidth (-cornerWidth) `transOn` t)
 
 exitTransform :: Segment -> Transform
 exitTransform (Segment tile p t)
@@ -87,9 +90,9 @@ straightEdges (Segment Straight p t)  =
   in V.fromList [left, right]
 
 moveToCircleOrigin :: Segment -> Position
-moveToCircleOrigin (Segment Left p t)  = relativePosition 0 (-0.82) p t
-moveToCircleOrigin (Segment Right p t)  = relativePosition 0 0.82 p t
+moveToCircleOrigin (Segment Left p t)  = relativePosition 0 (-cornerWidth) p t
+moveToCircleOrigin (Segment Right p t)  = relativePosition 0 cornerWidth p t
 
 moveFromCircleOrigin :: Segment -> Position -> Position
-moveFromCircleOrigin (Segment Left _ t) p = relativePosition 0 0.82 p t
-moveFromCircleOrigin (Segment Right _ t) p = relativePosition 0 (-0.82) p t
+moveFromCircleOrigin (Segment Left _ t) p = relativePosition 0 cornerWidth p t
+moveFromCircleOrigin (Segment Right _ t) p = relativePosition 0 (-cornerWidth) p t

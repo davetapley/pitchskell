@@ -87,6 +87,7 @@ isRectangle v =
             similar x y = abs(x-y) / ((x+y) / 2) < 0.8
             avg x y = x + y / 2
 
+-- If sticker is 47, then track is 53
 startSticker :: Mat ('S ['D, 'D]) ('S 3) ('S Word8)
 startSticker =
     exceptError $ coerceMat $ unsafePerformIO $

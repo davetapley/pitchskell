@@ -26,5 +26,5 @@ idleNoCars =
     CV.exceptError $ coerceMat $ unsafePerformIO $
       CV.imdecode CV.ImreadUnchanged <$> B.readFile "test/images/idle-no-cars-0.png"
 
-idleNoCarsStart = Track.Segment Track.Straight (V2 485 141) $ mkTransform (V2 (V2 (-47) (-1)) (V2 1 (-47)))
+idleNoCarsStart = Track.Segment Track.Straight (V2 429 141) $ mkTransform (V2 (V2 (-52) (-1)) (V2 1 (-52)))
 idleNoCarsTrack = fromJust $ Track.parseTrack idleNoCarsStart "sslrlsllrsslrlls"

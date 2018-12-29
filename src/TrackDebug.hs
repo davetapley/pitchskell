@@ -80,13 +80,13 @@ drawOutline
 
 drawOutline imgM (n, Segment Straight p t) =
   let origin = round <$> (p + (V2 0 (-0.5) `transOn` t))
-      size = round <$> (V2 1.613 1 `transOn` t)
-      middle = round <$> p + (V2 (1.613/2.0) 0 `transOn` t)
+      size = round <$> (V2 trackLength 1 `transOn` t)
+      middle = round <$> p + (V2 (trackLength/2.0) 0 `transOn` t)
       points = V.fromList $ map (\pt -> round <$> p + (pt `transOn` t)) [
         V2 0 (-0.5),
         V2 0   0.5,
-        V2 1.613   0.5,
-        V2 1.613 (-0.5)]
+        V2 trackLength   0.5,
+        V2 trackLength (-0.5)]
   in do
     line imgM (points ! 0) (points ! 1) green 1 LineType_AA 0
     line imgM (points ! 1) (points ! 2) green 1 LineType_AA 0

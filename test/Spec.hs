@@ -225,7 +225,7 @@ trackNextSegment = let
   (Track.Segment tile p t) = Track.nextSegment Track.start Track.Right
   in do
     tile @?= Track.Right
-    p @?= V2 1.613 0
+    p @?= V2 Track.trackLength 0
     getMat t @?= V2 Track.trackUnitVector (V2 0 1)
 
 trackScanl :: Assertion
@@ -240,11 +240,11 @@ trackScanl = let
     getMat x_t @?= V2 Track.trackUnitVector (V2 0 1)
 
     y_tile @?= Track.Right
-    y_p @?= V2 1.613 0
+    y_p @?= V2 Track.trackLength 0
     getMat y_t @?= V2 Track.trackUnitVector (V2 0 1)
 
     z_tile @?= Track.Right
-    z_p @?= V2 2.433 0.82
+    z_p @?= V2 (Track.trackLength + Track.cornerWidth) Track.cornerWidth
     getMat z_t @?= V2 (V2 0 1) (V2 (-1) 0)
 
 trackStart :: Assertion
