@@ -105,7 +105,6 @@ tileMatcherTests :: TestTree
 tileMatcherTests = testGroup "Tile matcher tests"
   [ testCase "Straight is a straight" tileMatcherStraight
   , testCase "Left is a left" tileMatcherLeft
-  , testCase "Draw track mask" tileMatcherDrawTrackMask
   , testCase "Find track" tileMatcherFindTrack
   ]
 
@@ -120,16 +119,17 @@ tileMatcherLeft = do
   let left = idleNoCarsTrack Loop.!! 2
   renderImage "/tmp/tileMatcherLeft.png" $ TileMatcherDebug.drawTileMasks idleNoCars left
 
-tileMatcherDrawTrackMask :: Assertion
-tileMatcherDrawTrackMask =  renderImage "/tmp/tileMatcherTrack.png" $ drawTrackMask idleNoCars idleNoCarsTrack
-
 tileMatcherFindTrack :: Assertion
-tileMatcherFindTrack = TileMatcher.findTrack idleNoCars idleNoCarsStart @?= idleNoCarsTrack
+tileMatcherFindTrack = do
+  let foundTrack = TileMatcher.findTrack idleNoCars idleNoCarsStart
+  renderImage "/tmp/tileMatcherTrackMask.png" $ drawTrackMask idleNoCars foundTrack
+  foundTrack @?= idleNoCarsTrack
 
 trackDebugTests :: TestTree
 trackDebugTests = testGroup "TrackDebug tests"
   [ testCase "drawTrack" trackDebugArrows
   , testCase "outline" trackDebugOutline
+  , testCase "Draw track mask" trackDrawTrackMask
   ]
 
 trackDebugArrows :: Assertion
@@ -137,6 +137,9 @@ trackDebugArrows = renderImage "/tmp/trackArrows.png" $ drawTrackArrows idleNoCa
 
 trackDebugOutline :: Assertion
 trackDebugOutline = renderImage "/tmp/trackOutline.png" $ drawTrackOutline idleNoCars idleNoCarsTrack
+
+trackDrawTrackMask :: Assertion
+trackDrawTrackMask =  renderImage "/tmp/trackMask.png" $ drawTrackMask idleNoCars idleNoCarsTrack
 
 loopTests :: TestTree
 loopTests = testGroup "Loop tests"
