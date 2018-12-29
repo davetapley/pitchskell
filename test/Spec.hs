@@ -22,8 +22,6 @@ import TileJoin as TJ
 import TileMatcher
 import TrackTracker as TT
 import qualified TileMatcherDebug
-import SegmentPositioner
-import SegmentPositionerDebug
 import qualified Loop
 import qualified Track
 import TrackGeometry
@@ -34,7 +32,10 @@ import OpenCV.Core.Types.Mat
 import OpenCV.VideoIO.Types
 import qualified Data.Vector as V
 
+import Image
 import qualified Video
+import MaskDebug
+import qualified SegmentPositionerTests
 import FrameWriter
 
 import Text.Printf
@@ -46,9 +47,9 @@ main = defaultMain unitTests
 
 unitTests = testGroup "Unit tests"
   [ Video.tests
+  , SegmentPositionerTests.tests
   , startFiducialTests
   , tileMatcherTests
-  , segmentPositionerTests
   , trackDebugTests
   , loopTests
   , trackTests
@@ -62,21 +63,6 @@ startFiducialTests = testGroup "Start fiducial tests"
   , testCase "Start fiducial consistency" testStartFiducialConsistency
   , testStartFiducialIsRectangle
   ]
-
-idleNoCars =
-    CV.exceptError $ coerceMat $ unsafePerformIO $
-      CV.imdecode CV.ImreadUnchanged <$> B.readFile "test/images/idle-no-cars-0.png"
-
-idleNoCarsStart = Track.Segment Track.Straight (V2 479 138) $ mkTransform (V2 (V2 (-53) (-3)) (V2 3 (-53)))
-idleNoCarsTrack = fromJust $ Track.parseTrack idleNoCarsStart "sslrlsllrsslrlls"
-
-renderImage
-    :: FilePath
-    -> CV.Mat ('CV.S [h, w]) channels depth
-    -> IO ()
-renderImage fp img = do
-    let bs = CV.exceptError $ CV.imencode (CV.OutputPng CV.defaultPngParams) img
-    B.writeFile fp bs
 
 testStartFiducialPosition :: Assertion
 testStartFiducialPosition = do
@@ -140,67 +126,10 @@ tileMatcherLeft = do
   renderImage "/tmp/tileMatcherLeft.png" $ TileMatcherDebug.drawTileMasks idleNoCars left
 
 tileMatcherDrawTrackMask :: Assertion
-tileMatcherDrawTrackMask =  renderImage "/tmp/tileMatcherTrack.png" $ TileMatcherDebug.drawTrackMask idleNoCars idleNoCarsTrack
+tileMatcherDrawTrackMask =  renderImage "/tmp/tileMatcherTrack.png" $ drawTrackMask idleNoCars idleNoCarsTrack
 
 tileMatcherFindTrack :: Assertion
 tileMatcherFindTrack = TileMatcher.findTrack idleNoCars idleNoCarsStart @?= idleNoCarsTrack
-
-segmentPositionerTests :: TestTree
-segmentPositionerTests = testGroup "Tile positioner tests"
-  [ testCase "Inpaint walls" segmentPositionerInpaintWalls
-  , testCase "Canny edges" segmentPositionerCanny
-  , testCase "Corner radius" segmentPositionerMinRadius
-  , testCase "Lines" segmentPositionerLines
-  , testCase "Circles" segmentPositionerCircles
-  , testCase "Geometry debug" segmentPositionerGeometryDebug
-  , testCase "Position stays close-ish" segmentPositionerDistance
-  , testCase "Angle is close-ish" segmentPositionerAngle
-  , testCase "track" segmentPositionerTrack
-  ]
-
-segmentPositionerInpaintWalls :: Assertion
-segmentPositionerInpaintWalls = renderImage "/tmp/segmentPositionerInpaintWalls.png" (showInpaintWalls idleNoCars)
-
-segmentPositionerCanny :: Assertion
-segmentPositionerCanny = do
-  let t = Track.transform idleNoCarsStart
-  let edgeImg = showHough t idleNoCars
-  renderImage "/tmp/segmentPositionerCannyHough.png" edgeImg
-  let edgeImgInpaint = showHough t . inpaintWalls $ idleNoCars
-  renderImage "/tmp/segmentPositionerCannyHoughInpaintedWalls.png" edgeImgInpaint
-
-segmentPositionerMinRadius :: Assertion
-segmentPositionerMinRadius =
-  let t = Track.transform idleNoCarsStart
-    in round (innerCornerCircleRadius t) @?= 18
-
-segmentPositionerLines :: Assertion
-segmentPositionerLines = V.length (SegmentPositioner.lines idleNoCars) @?= 38
-
-segmentPositionerCircles :: Assertion
-segmentPositionerCircles =
-  let t = Track.transform idleNoCarsStart
-    in V.length (SegmentPositioner.circles t idleNoCars) @?= 53
-
-segmentPositionerGeometryDebug :: Assertion
-segmentPositionerGeometryDebug = zipWithM_ image [0 :: Int ..] (Loop.unfold idleNoCarsTrack)
-  where image n = renderImage ("/tmp/segmentPositionerGeometryDebug." ++ printf "%02d" n ++ ".png") . positionGeometryDebug idleNoCars
-
-segmentPositionerDistance :: Assertion
-segmentPositionerDistance = zipWithM_ (\n s -> closeEnough s @? printf "%02d" n ++ " strayed too far" ) [0 :: Int ..] (Loop.unfold idleNoCarsTrack)
-  where closeEnough s = distance (positionTile idleNoCars s ) (Track.position s) < (trackWidth (Track.transform idleNoCarsStart) / 2.0)
-
-segmentPositionerAngle :: Assertion
-segmentPositionerAngle = zipWithM_ (\n s -> closeEnough s @? printf "%02d" n ++ " rotated too much" ) [0 :: Int ..] (Loop.unfold idleNoCarsTrack)
-  where
-    closeEnough s = modDistance (angleFromTransform $ transformTile idleNoCars s ) (angleFromTransform $ Track.transform s) < (pi/4.0)
-    modDistance a b = let diff = abs (a - b) in min diff ((2*pi) - diff) -- https://stackoverflow.com/a/6193318/21115
-
-segmentPositionerTrack :: Assertion
-segmentPositionerTrack = do
-  let positions = positionSegments idleNoCars idleNoCarsTrack
-  renderImage "/tmp/segmentPositionerTrackMask.png" $ TileMatcherDebug.drawTrackMask idleNoCars positions
-  renderImage "/tmp/segmentPositionerTrackOutline.png" $ drawTrackOutline idleNoCars positions
 
 trackDebugTests :: TestTree
 trackDebugTests = testGroup "TrackDebug tests"
