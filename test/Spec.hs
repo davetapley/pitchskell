@@ -18,7 +18,6 @@ import qualified Numeric.LinearAlgebra.HMatrix as HM
 import qualified FrameGrabber
 import StartFiducial as SF
 import StartFiducialDebug
-import TileJoin as TJ
 import TileMatcher
 import TrackTracker as TT
 import qualified TileMatcherDebug
@@ -71,9 +70,6 @@ testStartFiducialPosition = do
 
   (round <$> center) @?= V2 383 487
   (round <$> tip) @?= V2 383 430
-
-  points <- fromJust <$> TJ.findCenter idleNoCars
-  renderImage "/tmp/drawCenterTJ.png" $ drawArrow idleNoCars points
 
 testStartFiducialTransform :: Assertion
 testStartFiducialTransform = do
