@@ -46,15 +46,15 @@ segmentPositionerCanny = do
 segmentPositionerMinRadius :: Assertion
 segmentPositionerMinRadius =
   let t = Track.transform idleNoCarsStart
-    in round (innerCornerCircleRadius t) @?= 18
+    in round (innerCornerCircleRadius t) @?= 17
 
 segmentPositionerLines :: Assertion
-segmentPositionerLines = V.length (SegmentPositioner.lines idleNoCars) @?= 38
+segmentPositionerLines = V.length (SegmentPositioner.lines idleNoCars) @?= 41
 
 segmentPositionerCircles :: Assertion
 segmentPositionerCircles =
   let t = Track.transform idleNoCarsStart
-    in V.length (SegmentPositioner.circles t idleNoCars) @?= 53
+    in V.length (SegmentPositioner.circles t idleNoCars) @?= 56
 
 segmentPositionerGeometryDebug :: Assertion
 segmentPositionerGeometryDebug = zipWithM_ image [0 :: Int ..] (Loop.unfold idleNoCarsTrack)
