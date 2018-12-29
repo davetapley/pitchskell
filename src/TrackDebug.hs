@@ -14,7 +14,6 @@ import OpenCV
 import OpenCV.Extra.XFeatures2d
 import OpenCV.Internal.C.Types
 import Track
-import TrackGeometry
 import Transform
 import Loop
 import Colors

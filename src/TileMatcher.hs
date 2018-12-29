@@ -23,7 +23,6 @@ import Debug.Trace
 import Mask
 import Track
 import Transform
-import TrackGeometry
 import Loop
 
 import Colors

@@ -13,7 +13,6 @@ import OpenCV
 
 import Colors
 import Track
-import TrackGeometry
 import Transform
 
 type MaskMat = Mat ('S ['D, 'D]) ('S 1) ('S Word8)

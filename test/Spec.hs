@@ -23,7 +23,6 @@ import TrackTracker as TT
 import qualified TileMatcherDebug
 import qualified Loop
 import qualified Track
-import TrackGeometry
 import Transform
 import qualified OpenCV as CV
 import TrackDebug
@@ -224,7 +223,7 @@ trackNextSegment = let
   in do
     tile @?= Track.Right
     p @?= V2 1.613 0
-    getMat t @?= V2 trackUnitVector (V2 0 1)
+    getMat t @?= V2 Track.trackUnitVector (V2 0 1)
 
 trackScanl :: Assertion
 trackScanl = let
@@ -235,11 +234,11 @@ trackScanl = let
   in do
     x_tile @?= Track.Straight
     x_p @?= zero
-    getMat x_t @?= V2 trackUnitVector (V2 0 1)
+    getMat x_t @?= V2 Track.trackUnitVector (V2 0 1)
 
     y_tile @?= Track.Right
     y_p @?= V2 1.613 0
-    getMat y_t @?= V2 trackUnitVector (V2 0 1)
+    getMat y_t @?= V2 Track.trackUnitVector (V2 0 1)
 
     z_tile @?= Track.Right
     z_p @?= V2 2.433 0.82

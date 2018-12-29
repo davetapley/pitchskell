@@ -18,7 +18,6 @@ import qualified Data.Text as T
 
 import SegmentPositioner
 import Track
-import TrackGeometry
 import Transform
 import Colors
 import TrackDebug(drawSegmentArrow)

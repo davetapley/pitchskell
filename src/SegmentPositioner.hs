@@ -22,7 +22,6 @@ import System.IO.Unsafe ( unsafePerformIO )
 import Loop
 import Track
 import Transform
-import TrackGeometry
 
 import Debug.Trace
 
